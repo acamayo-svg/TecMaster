@@ -1,0 +1,63 @@
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--fuente-texto);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: var(--radio);
+  transition: background var(--transicion), color var(--transicion), transform var(--transicion), box-shadow var(--transicion), border-color var(--transicion);
+}
+
+.boton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.boton--normal {
+  padding: 0.65rem 1.25rem;
+  font-size: 0.95rem;
+}
+
+.boton--grande {
+  padding: 0.9rem 1.75rem;
+  font-size: 1.05rem;
+}
+
+.boton--primario {
+  background: var(--color-acento);
+  color: #0a0a0f;
+  border: 2px solid var(--color-acento);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+}
+
+.boton--primario:hover:not(:disabled) {
+  background: var(--color-acento-hover);
+  border-color: var(--color-acento-hover);
+  box-shadow: 0 0 28px rgba(0, 245, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.boton--secundario {
+  background: transparent;
+  color: var(--color-acento);
+  border: 2px solid var(--color-borde-neon);
+}
+
+.boton--secundario:hover:not(:disabled) {
+  background: var(--color-acento-claro);
+  border-color: var(--color-acento);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
+}
+
+.boton--texto {
+  background: transparent;
+  color: var(--color-acento);
+  border: none;
+}
+
+.boton--texto:hover:not(:disabled) {
+  color: var(--color-acento-hover);
+  text-shadow: 0 0 12px rgba(0, 245, 255, 0.5);
+}

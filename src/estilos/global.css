@@ -1,0 +1,151 @@
+/* ===== Tema oscuro (Cyberpunk) — por defecto ===== */
+:root,
+[data-tema="oscuro"] {
+  --color-fondo: #0a0a0f;
+  --color-fondo-secundario: #12121a;
+  --color-superficie: #16161f;
+  --color-superficie-elevada: #1c1c28;
+  --color-borde: #2a2a3a;
+  --color-borde-neon: rgba(0, 245, 255, 0.4);
+  --color-texto: #e8e8f0;
+  --color-texto-secundario: #a0a0b8;
+  --color-texto-suave: #707090;
+  --color-acento: #00f5ff;
+  --color-acento-hover: #00d4dd;
+  --color-acento-claro: rgba(0, 245, 255, 0.15);
+  --color-neon-magenta: #ff00aa;
+  --color-neon-rosa: #ff006e;
+  --color-neon-amarillo: #ffdd00;
+  --color-peligro: #ff3366;
+  --color-exito: #00ff88;
+  --sombra-suave: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --sombra-media: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --sombra-elevada: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --sombra-neon: 0 0 20px rgba(0, 245, 255, 0.3);
+  --sombra-neon-magenta: 0 0 20px rgba(255, 0, 170, 0.25);
+  --radio: 4px;
+  --radio-grande: 8px;
+  --transicion: 0.25s ease;
+  --fuente-texto: 'Rajdhani', 'Exo 2', system-ui, sans-serif;
+  --fuente-titular: 'Orbitron', monospace;
+  --color-encabezado-fondo: rgba(10, 10, 15, 0.92);
+}
+
+/* ===== Tema claro ===== */
+[data-tema="claro"] {
+  --color-fondo: #f0f4f8;
+  --color-fondo-secundario: #e2e8f0;
+  --color-superficie: #ffffff;
+  --color-superficie-elevada: #f8fafc;
+  --color-borde: #cbd5e1;
+  --color-borde-neon: rgba(14, 165, 233, 0.5);
+  --color-texto: #0f172a;
+  --color-texto-secundario: #475569;
+  --color-texto-suave: #64748b;
+  --color-acento: #0ea5e9;
+  --color-acento-hover: #0284c7;
+  --color-acento-claro: rgba(14, 165, 233, 0.12);
+  --color-neon-magenta: #c026d3;
+  --color-neon-rosa: #db2777;
+  --color-neon-amarillo: #ca8a04;
+  --color-peligro: #dc2626;
+  --color-exito: #16a34a;
+  --sombra-suave: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --sombra-media: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --sombra-elevada: 0 12px 40px rgba(0, 0, 0, 0.12);
+  --sombra-neon: 0 0 20px rgba(14, 165, 233, 0.2);
+  --sombra-neon-magenta: 0 0 20px rgba(192, 38, 211, 0.2);
+  --color-encabezado-fondo: rgba(255, 255, 255, 0.95);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--fuente-texto);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-texto);
+  background: var(--color-fondo);
+  min-height: 100vh;
+}
+
+/* Grid sutil de fondo (oscuro: cyan; claro: gris) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 245, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 245, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-tema="claro"] body::before {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+}
+
+#raiz {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.contenido-principal {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* Enlaces */
+a {
+  color: var(--color-acento);
+  text-decoration: none;
+  transition: color var(--transicion);
+}
+
+a:hover {
+  color: var(--color-acento-hover);
+}
+
+/* Botones base */
+button {
+  font-family: var(--fuente-texto);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Inputs base */
+input,
+select,
+textarea {
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-texto-suave);
+}

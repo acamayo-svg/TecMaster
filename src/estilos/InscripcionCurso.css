@@ -1,0 +1,51 @@
+.inscripcion-curso {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.inscripcion-curso__tarjeta {
+  padding: 2rem;
+}
+
+.inscripcion-curso__titulo {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-texto);
+  margin-bottom: 0.35rem;
+}
+
+.inscripcion-curso__subtitulo {
+  color: var(--color-texto-secundario);
+  font-size: 0.95rem;
+  margin-bottom: 1.75rem;
+}
+
+.inscripcion-curso__formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.inscripcion-curso__mensaje--exito {
+  padding: 0.75rem 1rem;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  border-radius: var(--radio);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.inscripcion-curso__error {
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: var(--radio);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.inscripcion-curso__boton {
+  margin-top: 0.25rem;
+}

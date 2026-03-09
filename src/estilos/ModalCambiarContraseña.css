@@ -1,0 +1,107 @@
+.modal-contraseña {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-contraseña__fondo {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.modal-contraseña__ventana {
+  position: relative;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde-neon);
+  border-radius: var(--radio-grande);
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 0 40px rgba(0, 245, 255, 0.15);
+}
+
+.modal-contraseña__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.modal-contraseña__titulo {
+  font-family: var(--fuente-titular);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-texto);
+  margin: 0;
+}
+
+.modal-contraseña__cerrar {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--color-texto-secundario);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radio);
+  transition: color var(--transicion), background var(--transicion);
+}
+
+.modal-contraseña__cerrar:hover {
+  color: var(--color-acento);
+  background: var(--color-acento-claro);
+}
+
+.modal-contraseña__formulario {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.modal-contraseña__error {
+  padding: 0.75rem 1rem;
+  background: rgba(255, 51, 102, 0.12);
+  color: var(--color-peligro);
+  border-radius: var(--radio);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.modal-contraseña__etiqueta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-texto);
+}
+
+.modal-contraseña__input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-fondo-secundario);
+  color: var(--color-texto);
+  font-size: 1rem;
+}
+
+.modal-contraseña__input:focus {
+  outline: none;
+  border-color: var(--color-acento);
+  box-shadow: 0 0 0 2px var(--color-acento-claro);
+}
+
+.modal-contraseña__acciones {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}

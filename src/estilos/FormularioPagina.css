@@ -1,0 +1,54 @@
+.formulario-pagina {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+.formulario-pagina__tarjeta {
+  padding: 2rem;
+}
+
+.formulario-pagina__titulo {
+  font-family: var(--fuente-titular);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-texto);
+  margin-bottom: 0.35rem;
+}
+
+.formulario-pagina__subtitulo {
+  color: var(--color-texto-secundario);
+  font-size: 0.95rem;
+  margin-bottom: 1.75rem;
+}
+
+.formulario-pagina__formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.formulario-pagina__error {
+  padding: 0.75rem 1rem;
+  background: rgba(255, 51, 102, 0.12);
+  color: var(--color-peligro);
+  border: 1px solid rgba(255, 51, 102, 0.4);
+  border-radius: var(--radio);
+  font-size: 0.9rem;
+}
+
+.formulario-pagina__boton {
+  margin-top: 0.25rem;
+}
+
+.formulario-pagina__pie {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--color-texto-secundario);
+}
+
+.formulario-pagina__pie a {
+  font-weight: 600;
+}

@@ -1,0 +1,120 @@
+.certificado {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.certificado__doc-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.certificado--no-encontrado {
+  text-align: center;
+  padding: 2rem;
+}
+
+.certificado--no-encontrado p,
+.certificado__cargando {
+  margin-bottom: 1rem;
+  color: var(--color-texto-secundario);
+}
+
+.certificado__documento {
+  padding: 2.5rem;
+  text-align: center;
+  border: 2px solid var(--color-borde);
+}
+
+.certificado__marca {
+  font-family: var(--fuente-titular);
+  font-size: 1.5rem;
+  color: var(--color-acento);
+  margin-bottom: 1rem;
+}
+
+.certificado__titulo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-texto);
+  margin-bottom: 1.5rem;
+}
+
+.certificado__texto-certificado {
+  color: var(--color-texto-secundario);
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.certificado__nombre {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-texto);
+  margin: 0.5rem 0 1rem;
+}
+
+.certificado__curso {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-acento);
+  margin-bottom: 1rem;
+}
+
+.certificado__fecha,
+.certificado__codigo {
+  font-size: 0.9rem;
+  color: var(--color-texto-secundario);
+  margin-bottom: 0.35rem;
+}
+
+.certificado__codigo strong {
+  color: var(--color-texto);
+}
+
+.certificado__cadena {
+  font-size: 0.85rem;
+  color: var(--color-texto-secundario);
+  margin-top: 0.5rem;
+}
+
+.certificado__verificar {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--color-texto-suave);
+}
+
+.certificado__acciones {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.certificado__boton-imprimir {
+  padding: 0.65rem 1.25rem;
+  background: var(--color-acento);
+  color: white;
+  font-weight: 600;
+  border-radius: var(--radio);
+  font-size: 0.95rem;
+  transition: background var(--transicion);
+}
+
+.certificado__boton-imprimir:hover {
+  background: var(--color-acento-hover);
+}
+
+@media print {
+  .encabezado,
+  .pie-pagina,
+  .certificado__acciones,
+  .contenido-principal > *:not(.certificado) {
+    display: none !important;
+  }
+  .certificado__doc-wrap {
+    overflow: visible;
+    display: block !important;
+  }
+}

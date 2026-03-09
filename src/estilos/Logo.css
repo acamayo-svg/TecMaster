@@ -1,0 +1,260 @@
+/* Logo Tec Master — efecto sintonía / glitch */
+.logo-glitch {
+  position: relative;
+  display: inline-block;
+  font-family: var(--fuente-titular);
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: 0.12em;
+  color: var(--color-acento);
+  text-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+  overflow: visible;
+  padding: 2px 8px;
+}
+
+.logo-glitch__text {
+  display: block;
+  position: relative;
+  white-space: nowrap;
+}
+
+.logo-glitch__text--main {
+  position: relative;
+  z-index: 2;
+}
+
+.logo-glitch__text--r,
+.logo-glitch__text--b {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.logo-glitch__text--r {
+  color: #ff0066;
+  text-shadow: 0 0 12px rgba(255, 0, 102, 0.8);
+}
+
+.logo-glitch__text--b {
+  color: #00f5ff;
+  text-shadow: 0 0 12px rgba(0, 245, 255, 0.8);
+}
+
+/* Scanlines (como TV) — más visibles en el glitch */
+.logo-glitch__scanlines {
+  position: absolute;
+  inset: -20%;
+  z-index: 3;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.06) 2px,
+    rgba(0, 0, 0, 0.06) 4px
+  );
+  opacity: 0.5;
+  animation: logo-scanlines 6s linear infinite;
+}
+
+@keyframes logo-scanlines {
+  0% { transform: translateY(-10%); }
+  100% { transform: translateY(10%); }
+}
+
+/* Animación glitch / sintonía — distorsión más marcada */
+.logo-glitch--animado .logo-glitch__text--main {
+  animation: logo-stable 3s linear infinite;
+}
+
+.logo-glitch--animado .logo-glitch__text--r {
+  animation: logo-glitch-r 3s linear infinite;
+}
+
+.logo-glitch--animado .logo-glitch__text--b {
+  animation: logo-glitch-b 3s linear infinite;
+}
+
+@keyframes logo-stable {
+  0%, 58%, 64%, 74%, 82%, 90%, 100% {
+    transform: translate(0, 0) scale(1) skewX(0deg);
+    opacity: 1;
+    filter: none;
+  }
+  /* Primer glitch fuerte */
+  59% {
+    transform: translate(-6px, 4px) scale(1.03) skewX(-3deg);
+    opacity: 0.75;
+  }
+  60% {
+    transform: translate(5px, -4px) scale(0.97) skewX(4deg);
+    opacity: 0.9;
+  }
+  61% {
+    transform: translate(-3px, 2px) scale(1.02) skewX(-2deg);
+    opacity: 0.85;
+  }
+  62% {
+    transform: translate(0, 0) scale(1) skewX(0deg);
+    opacity: 1;
+  }
+  /* Segundo glitch */
+  75% {
+    transform: translate(6px, 2px) scale(1.02) skewX(3deg);
+    opacity: 0.8;
+  }
+  76% {
+    transform: translate(-5px, -3px) scale(0.98) skewX(-4deg);
+    opacity: 0.95;
+  }
+  77% {
+    transform: translate(0, 0) scale(1) skewX(0deg);
+    opacity: 1;
+  }
+  /* Tercer glitch */
+  83% {
+    transform: translate(-4px, -2px) scale(0.98) skewX(2deg);
+    opacity: 0.82;
+  }
+  84% {
+    transform: translate(4px, 3px) scale(1.02) skewX(-3deg);
+    opacity: 0.9;
+  }
+  85% {
+    transform: translate(0, 0) scale(1) skewX(0deg);
+    opacity: 1;
+  }
+  /* Cuarto micro-glitch */
+  91% {
+    transform: translate(3px, -2px) scale(1.01) skewX(-2deg);
+    opacity: 0.88;
+  }
+  92% {
+    transform: translate(0, 0) scale(1) skewX(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes logo-glitch-r {
+  0%, 58%, 64%, 74%, 82%, 90%, 100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  59% {
+    transform: translate(-10px, 0) skewX(-2deg);
+    opacity: 0.9;
+  }
+  60% {
+    transform: translate(6px, 2px) skewX(3deg);
+    opacity: 0.6;
+  }
+  61% {
+    transform: translate(-8px, -1px) skewX(-1deg);
+    opacity: 0.5;
+  }
+  62% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  75% {
+    transform: translate(-9px, 0) skewX(2deg);
+    opacity: 0.85;
+  }
+  76% {
+    transform: translate(7px, -2px) skewX(-3deg);
+    opacity: 0.45;
+  }
+  77% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  83% {
+    transform: translate(-6px, 1px) skewX(-2deg);
+    opacity: 0.7;
+  }
+  84% {
+    transform: translate(5px, 0) skewX(2deg);
+    opacity: 0.4;
+  }
+  85% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  91% {
+    transform: translate(-5px, 0);
+    opacity: 0.55;
+  }
+  92% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes logo-glitch-b {
+  0%, 58%, 64%, 74%, 82%, 90%, 100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  59% {
+    transform: translate(10px, 0) skewX(2deg);
+    opacity: 0.85;
+  }
+  60% {
+    transform: translate(-6px, -2px) skewX(-3deg);
+    opacity: 0.5;
+  }
+  61% {
+    transform: translate(8px, 1px) skewX(1deg);
+    opacity: 0.45;
+  }
+  62% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  75% {
+    transform: translate(9px, 0) skewX(-2deg);
+    opacity: 0.8;
+  }
+  76% {
+    transform: translate(-7px, 2px) skewX(3deg);
+    opacity: 0.4;
+  }
+  77% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  83% {
+    transform: translate(6px, -1px) skewX(2deg);
+    opacity: 0.65;
+  }
+  84% {
+    transform: translate(-5px, 0) skewX(-2deg);
+    opacity: 0.35;
+  }
+  85% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  91% {
+    transform: translate(5px, 0);
+    opacity: 0.5;
+  }
+  92% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+}
+
+/* Variante para pie de página (mismo estilo, animación opcional) */
+.pie-pagina .logo-glitch {
+  font-size: 1.5rem;
+}
+
+.pie-pagina .logo-glitch--animado .logo-glitch__scanlines {
+  animation-duration: 12s;
+}

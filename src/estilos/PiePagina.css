@@ -1,0 +1,142 @@
+.pie-pagina {
+  background: var(--color-fondo-secundario);
+  border-top: 1px solid var(--color-borde);
+  margin-top: auto;
+  padding: 2.5rem 1.5rem;
+}
+
+.pie-pagina__contenedor {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: start;
+}
+
+.pie-pagina__marca {
+  grid-column: 1;
+}
+
+.pie-pagina__logo {
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.pie-pagina__logo-wrap {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.pie-pagina__logo-scan {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 45%,
+    rgba(0, 245, 255, 0.15) 50%,
+    transparent 55%,
+    transparent 100%
+  );
+  animation: pie-logo-scan-h 3s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes pie-logo-scan-h {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.pie-pagina__logo-img {
+  display: block;
+  height: 120px;
+  width: auto;
+  max-width: 440px;
+  object-fit: contain;
+  animation: pie-logo-horizontal 4s ease-in-out infinite;
+  /* Quita el fondo blanco: se integra con el color del footer */
+  mix-blend-mode: multiply;
+}
+
+/* Efecto horizontal: desplazamiento y “scan” tipo sintonía */
+@keyframes pie-logo-horizontal {
+  0%, 65%, 75%, 88%, 96%, 100% {
+    transform: translateX(0);
+    filter: none;
+  }
+  66% {
+    transform: translateX(-3px);
+    filter: brightness(1.05);
+  }
+  67% {
+    transform: translateX(2px);
+    filter: brightness(0.98);
+  }
+  68% {
+    transform: translateX(0);
+    filter: none;
+  }
+  76% {
+    transform: translateX(4px);
+    filter: brightness(1.02);
+  }
+  77% {
+    transform: translateX(-2px);
+    filter: none;
+  }
+  78% {
+    transform: translateX(0);
+    filter: none;
+  }
+  89% {
+    transform: translateX(-2px);
+    filter: brightness(1.03);
+  }
+  90% {
+    transform: translateX(0);
+    filter: none;
+  }
+}
+
+.pie-pagina__descripcion {
+  color: var(--color-texto-secundario);
+  font-size: 0.9rem;
+  max-width: 280px;
+}
+
+.pie-pagina__enlaces {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.pie-pagina__enlaces a {
+  color: var(--color-texto-secundario);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.pie-pagina__enlaces a:hover {
+  color: var(--color-acento);
+}
+
+.pie-pagina__copyright {
+  grid-column: 1 / -1;
+  color: var(--color-texto-suave);
+  font-size: 0.85rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-borde);
+}
+
+@media (max-width: 600px) {
+  .pie-pagina__contenedor {
+    grid-template-columns: 1fr;
+  }
+}

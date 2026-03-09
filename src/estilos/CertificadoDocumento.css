@@ -1,0 +1,143 @@
+/* Documento del certificado (vista e impresión PDF). Sin CSS inline. */
+
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .cert-doc {
+    box-shadow: none;
+    border: none;
+  }
+}
+
+.cert-doc {
+  width: 297mm;
+  min-height: 210mm;
+  background: #ffffff;
+  padding: 28px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 2px solid #e2e8f0;
+  position: relative;
+}
+
+.cert-doc::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  pointer-events: none;
+}
+
+.cert-doc__logo-wrap {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 8px;
+}
+
+.cert-doc__logo-wrap img {
+  max-width: 340px;
+  height: auto;
+  display: inline-block;
+}
+
+.cert-doc__intro {
+  font-size: 1.15rem;
+  color: #475569;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.cert-doc__nombre {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  text-align: center;
+  margin-top: 24px;
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+
+.cert-doc__cedula {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.05rem;
+  font-style: italic;
+  color: #475569;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.cert-doc__texto-aprobo {
+  font-size: 1.08rem;
+  color: #475569;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.cert-doc__fecha {
+  font-size: 0.95rem;
+  color: #64748b;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.cert-doc__codigo {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  text-align: center;
+  letter-spacing: 0.04em;
+  margin-top: 16px;
+}
+
+.cert-doc__hash {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+  word-break: break-all;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.cert-doc__hash-valor {
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+}
+
+.cert-doc__pie {
+  position: absolute;
+  bottom: 20px;
+  left: 28px;
+  right: 28px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.cert-doc__qr-wrap {
+  position: absolute;
+  bottom: 20px;
+  right: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.cert-doc__qr-wrap img {
+  width: 70px;
+  height: 70px;
+  display: block;
+}
+
+.cert-doc__qr-wrap span {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-align: center;
+  max-width: 64px;
+}
