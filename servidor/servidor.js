@@ -29,9 +29,10 @@ import {
 import { validarCadenaCertificado, obtenerDetalleCadena } from './cadenaCertificados.js'
 
 const app = express()
-const PUERTO = 3001
+const PUERTO = process.env.PORT || 3001
+const ORIGEN_CORS = process.env.CORS_ORIGIN || 'http://localhost:5173'
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }))
+app.use(cors({ origin: ORIGEN_CORS, credentials: true }))
 app.use(express.json())
 
 function tokenAleatorio() {
@@ -358,7 +359,7 @@ async function iniciar() {
     process.exit(1)
   }
   app.listen(PUERTO, () => {
-    console.log(`Servidor en http://localhost:${PUERTO}`)
+    console.log(`Servidor en puerto ${PUERTO}`)
   })
 }
 

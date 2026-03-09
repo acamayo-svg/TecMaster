@@ -1,0 +1,32 @@
+# Dependencias
+node_modules/
+servidor/node_modules/
+
+# Variables de entorno (nunca subir contraseñas o claves)
+.env
+.env.local
+.env.*.local
+servidor/.env
+
+# Build
+dist/
+build/
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Certificados / claves (si son sensibles)
+# certificado-prototipo/
