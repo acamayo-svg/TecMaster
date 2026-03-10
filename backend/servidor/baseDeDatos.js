@@ -8,27 +8,30 @@ import {
 
 const { Pool } = pg
 
+// Si existe DATABASE_URL (Supabase), la usamos directamente
+const connectionString = process.env.DATABASE_URL
+
 const host = process.env.PGHOST || 'localhost'
 const esSupabase = host.includes('supabase') || host.includes('pooler')
 
-const pool = new Pool({
-  host,
-  port: parseInt(process.env.PGPORT || '5432', 10),
-  database: process.env.PGDATABASE || 'certificados',
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || 'postgres',
-  connectionTimeoutMillis: 10000,
-  // Supabase y la mayoría de Postgres en la nube exigen SSL
-  ...(esSupabase && { ssl: { rejectUnauthorized: false } }),
-})
+const pool = connectionString
+  ? new Pool({
+      connectionString,
+      ssl: { rejectUnauthorized: false },
+      connectionTimeoutMillis: 10000,
+    })
+  : new Pool({
+      host,
+      port: parseInt(process.env.PGPORT || '5432', 10),
+      database: process.env.PGDATABASE || 'certificados',
+      user: process.env.PGUSER || 'postgres',
+      password: process.env.PGPASSWORD || 'postgres',
+      connectionTimeoutMillis: 10000,
+      ...(esSupabase && { ssl: { rejectUnauthorized: false } }),
+    })
 
 // Crear tablas si no existen (al iniciar)
 export async function inicializarTablas() {
-  console.log('Inicializando tablas de PostgreSQL...', {
-    host,
-    port: parseInt(process.env.PGPORT || '5432', 10),
-    database: process.env.PGDATABASE || 'certificados',
-  })
   const cliente = await pool.connect()
   try {
     await cliente.query(`
