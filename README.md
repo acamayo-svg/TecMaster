@@ -1,50 +1,26 @@
-# Plataforma de Certificados
+# Plataforma de certificados — Tec Master
 
-Plataforma para emitir y verificar certificados de cursos: registro, inicio de sesión, dashboard de usuario, inscripción a cursos, aprobación y generación de certificados, y consulta para empresas. Incluye **frontend (React)** y **backend (Node + Express)** con base de datos en archivo JSON.
+Proyecto de cursos con certificados (frontend React + backend Express + PostgreSQL), preparado para desplegar en **Vercel** con frontend y API en **dos proyectos separados**.
 
-## Estructura del proyecto (español)
+## Estructura del repositorio
 
-```
-src/                 Frontend React
-  componentes/       Encabezado, PiePagina, Boton, CampoFormulario, Tarjeta
-  contexto/         AuthContext
-  estilos/          CSS por componente o página
-  paginas/          Inicio, IniciarSesion, Registro, AreaUsuario, etc.
-  utilidades/       api.js (llamadas al backend), datosEjemplo (ya no usado en flujo real)
-servidor/            Backend Node + Express + PostgreSQL
-  baseDeDatos.js    Conexión a PostgreSQL (usuarios, inscripciones, certificados)
-  cursos.js         Catálogo de cursos
-  servidor.js       API REST
-  esquema.sql       Script opcional para crear tablas en pgAdmin
-  .env              Configuración de conexión (PGHOST, PGDATABASE, PGUSER, PGPASSWORD)
-```
+| Carpeta     | Contenido                          | Uso en Vercel        |
+|------------|-------------------------------------|------------------------|
+| **frontend/** | App React (Vite), páginas y estilos | Un proyecto → Root: `frontend` |
+| **backend/**  | API Express (Node), servidor y DB   | Otro proyecto → Root: `backend`  |
 
-## Cómo ejecutar
+- **Frontend**: solo construye y sirve la SPA; necesita la variable `VITE_API_URL` con la URL del backend.
+- **Backend**: sirve la API bajo `/api` como función serverless; necesita variables de PostgreSQL y `CORS_ORIGIN` (URL del frontend).
 
-**Importante:** hay que levantar el **servidor** y el **frontend**. Ver **[COMO-EJECUTAR.md](./COMO-EJECUTAR.md)** para los pasos detallados.
+## Cómo desplegar
 
-Resumen:
+Sigue la guía **[DEPLOYMENT_VERCEL.md](./DEPLOYMENT_VERCEL.md)** para:
 
-1. En la raíz: `npm install` y luego `npm run dev` (frontend en http://localhost:5173).
-2. En otra terminal, en `servidor`: `npm install` y `npm run iniciar` (API en http://localhost:3001).
+1. Crear la base de datos (ej. Supabase).
+2. Crear el proyecto de Vercel para el **backend** (Root: `backend`) y configurar variables de entorno.
+3. Crear el proyecto de Vercel para el **frontend** (Root: `frontend`) y configurar `VITE_API_URL`.
 
-## Rutas
+## Desarrollo local
 
-- `/` — Inicio
-- `/iniciar-sesion` — Inicio de sesión
-- `/registro` — Registro de usuario
-- `/area-usuario` — Área del usuario (cursos y certificados)
-- `/inscripcion-curso` — Formulario de inscripción a curso
-- `/curso/:idCurso` — Detalle del curso (aprobar y generar certificado)
-- `/certificado/:idCertificado` — Vista del certificado
-- `/empresas` — Sección para empresas (verificación)
-- `/empresas/consultar` — Formulario para consultar certificado por código
-
-## Formularios
-
-- **Registro:** nombre, correo, contraseña, repetir contraseña
-- **Iniciar sesión:** correo, contraseña
-- **Inscripción a curso:** selector de curso
-- **Consultar certificado (empresas):** código de verificación
-
-Los datos son de ejemplo (sin backend). Para verificar un certificado de prueba usa el código: `CERT-2024-001-X7K9`.
+- **Backend**: `cd backend && npm install && npm run dev` (requiere PostgreSQL y `backend/servidor/.env`).
+- **Frontend**: `cd frontend && npm install && npm run dev` (por defecto usa `http://localhost:3001` como API si no hay `VITE_API_URL`).

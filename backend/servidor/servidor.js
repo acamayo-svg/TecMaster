@@ -363,4 +363,9 @@ async function iniciar() {
   })
 }
 
-iniciar()
+// En Vercel no hacemos listen; la app se usa como serverless
+if (!process.env.VERCEL) {
+  iniciar()
+}
+
+export default app
