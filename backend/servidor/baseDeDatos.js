@@ -8,12 +8,17 @@ import {
 
 const { Pool } = pg
 
+const host = process.env.PGHOST || 'localhost'
+const esSupabase = host.includes('supabase') || host.includes('pooler')
+
 const pool = new Pool({
-  host: process.env.PGHOST || 'localhost',
+  host,
   port: parseInt(process.env.PGPORT || '5432', 10),
   database: process.env.PGDATABASE || 'certificados',
   user: process.env.PGUSER || 'postgres',
   password: process.env.PGPASSWORD || 'postgres',
+  // Supabase y la mayoría de Postgres en la nube exigen SSL
+  ...(esSupabase && { ssl: { rejectUnauthorized: false } }),
 })
 
 // Crear tablas si no existen (al iniciar)
