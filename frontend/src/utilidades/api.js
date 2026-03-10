@@ -1,4 +1,22 @@
 const URL_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const TIMEOUT_MS = 20000
+
+/** fetch con tiempo límite para no quedarse colgado si el backend no responde */
+async function fetchConTimeout(url, opciones = {}, timeout = TIMEOUT_MS) {
+  const controlador = new AbortController()
+  const id = setTimeout(() => controlador.abort(), timeout)
+  try {
+    const res = await fetch(url, { ...opciones, signal: controlador.signal })
+    clearTimeout(id)
+    return res
+  } catch (err) {
+    clearTimeout(id)
+    if (err.name === 'AbortError') {
+      throw new Error('El servidor no respondió a tiempo. Vuelve a intentarlo.')
+    }
+    throw new Error('No se pudo conectar con el servidor. Revisa la URL del backend o tu conexión.')
+  }
+}
 
 function obtenerToken() {
   try {
@@ -21,7 +39,7 @@ function cabeceras(conToken = false) {
 }
 
 export async function apiRegistro(nombre, correo, contraseña, cedula) {
-  const res = await fetch(`${URL_BASE}/api/usuarios/registro`, {
+  const res = await fetchConTimeout(`${URL_BASE}/api/usuarios/registro`, {
     method: 'POST',
     headers: cabeceras(),
     body: JSON.stringify({ nombre, correo, contraseña, cedula }),
@@ -32,7 +50,7 @@ export async function apiRegistro(nombre, correo, contraseña, cedula) {
 }
 
 export async function apiIniciarSesion(correo, contraseña) {
-  const res = await fetch(`${URL_BASE}/api/usuarios/iniciar-sesion`, {
+  const res = await fetchConTimeout(`${URL_BASE}/api/usuarios/iniciar-sesion`, {
     method: 'POST',
     headers: cabeceras(),
     body: JSON.stringify({ correo, contraseña }),
