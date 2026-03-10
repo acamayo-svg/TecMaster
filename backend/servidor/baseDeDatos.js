@@ -17,12 +17,18 @@ const pool = new Pool({
   database: process.env.PGDATABASE || 'certificados',
   user: process.env.PGUSER || 'postgres',
   password: process.env.PGPASSWORD || 'postgres',
+  connectionTimeoutMillis: 10000,
   // Supabase y la mayoría de Postgres en la nube exigen SSL
   ...(esSupabase && { ssl: { rejectUnauthorized: false } }),
 })
 
 // Crear tablas si no existen (al iniciar)
 export async function inicializarTablas() {
+  console.log('Inicializando tablas de PostgreSQL...', {
+    host,
+    port: parseInt(process.env.PGPORT || '5432', 10),
+    database: process.env.PGDATABASE || 'certificados',
+  })
   const cliente = await pool.connect()
   try {
     await cliente.query(`
