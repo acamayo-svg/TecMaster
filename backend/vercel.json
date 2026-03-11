@@ -1,11 +1,3 @@
 {
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs18.x"
-    },
-    "api/[...path].js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "rewrites": []
 }
