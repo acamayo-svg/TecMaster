@@ -34,3 +34,6 @@ npm-debug.log*
 
 # Certificados / claves (si son sensibles)
 # certificado-prototipo/
+
+# Carpeta temporal (otro repo, no subir)
+Snappy/
