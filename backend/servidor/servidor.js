@@ -35,6 +35,11 @@ const ORIGEN_CORS = process.env.CORS_ORIGIN || 'http://localhost:5173'
 app.use(cors({ origin: ORIGEN_CORS, credentials: true }))
 app.use(express.json())
 
+// Endpoint rápido para verificar que la función responde (sin tocar BD)
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true })
+})
+
 function tokenAleatorio() {
   return crypto.randomBytes(24).toString('hex')
 }

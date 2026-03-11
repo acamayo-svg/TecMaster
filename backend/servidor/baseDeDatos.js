@@ -8,27 +8,21 @@ import {
 
 const { Pool } = pg
 
-// Si existe DATABASE_URL (Supabase), la usamos directamente
-const connectionString = process.env.DATABASE_URL
-
 const host = process.env.PGHOST || 'localhost'
-const esSupabase = host.includes('supabase') || host.includes('pooler')
+const port = parseInt(process.env.PGPORT || '5432', 10)
+const database = process.env.PGDATABASE || 'certificados'
+const user = process.env.PGUSER || 'postgres'
+const password = process.env.PGPASSWORD || 'postgres'
 
-const pool = connectionString
-  ? new Pool({
-      connectionString,
-      ssl: { rejectUnauthorized: false },
-      connectionTimeoutMillis: 10000,
-    })
-  : new Pool({
-      host,
-      port: parseInt(process.env.PGPORT || '5432', 10),
-      database: process.env.PGDATABASE || 'certificados',
-      user: process.env.PGUSER || 'postgres',
-      password: process.env.PGPASSWORD || 'postgres',
-      connectionTimeoutMillis: 10000,
-      ...(esSupabase && { ssl: { rejectUnauthorized: false } }),
-    })
+const pool = new Pool({
+  host,
+  port,
+  database,
+  user,
+  password,
+  connectionTimeoutMillis: 15000,
+  ssl: host === 'localhost' ? false : { rejectUnauthorized: false },
+})
 
 // Crear tablas si no existen (al iniciar)
 export async function inicializarTablas() {

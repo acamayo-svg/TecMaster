@@ -1,5 +1,6 @@
 /**
- * Handler serverless para Vercel: redirige todas las peticiones /api/* a la app Express.
+ * Catch-all serverless handler para Vercel.
+ * Permite que /api/* llegue a la misma app Express conservando la ruta.
  */
 import app from '../servidor/servidor.js'
 
@@ -9,3 +10,4 @@ const handler = createHandler(app)
 export default async function (req, res) {
   return handler(req, res)
 }
+
