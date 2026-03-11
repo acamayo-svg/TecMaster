@@ -9,11 +9,32 @@ const handler = createHandler(app)
 
 let dbReady = null
 async function ensureDb() {
-  if (dbReady === null) dbReady = inicializarTablas().catch((err) => { dbReady = Promise.reject(err); throw err })
+  if (dbReady === null) {
+    dbReady = inicializarTablas().catch((err) => {
+      dbReady = Promise.reject(err)
+      throw err
+    })
+  }
   return dbReady
 }
 
+const CONNECTION_TIMEOUT_MS = 20000
+
 export default async function (req, res) {
-  await ensureDb()
+  try {
+    await Promise.race([
+      ensureDb(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout conectando a la base de datos')), CONNECTION_TIMEOUT_MS)
+      ),
+    ])
+  } catch (err) {
+    console.error('Error inicializando BD:', err)
+    res.status(500).json({
+      error: 'Error de base de datos',
+      detalle: err.message || String(err),
+    })
+    return
+  }
   return handler(req, res)
 }
