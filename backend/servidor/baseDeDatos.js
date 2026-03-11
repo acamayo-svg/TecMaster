@@ -8,11 +8,14 @@ import {
 
 const { Pool } = pg
 
-const host = process.env.PGHOST || 'localhost'
-const port = parseInt(process.env.PGPORT || '5432', 10)
-const database = process.env.PGDATABASE || 'certificados'
-const user = process.env.PGUSER || 'postgres'
-const password = process.env.PGPASSWORD || 'postgres'
+// Mismo patrón que Snappy: DB_* (Vercel/Supabase) con fallback a PG_* y local
+const host = process.env.DB_HOST || process.env.PGHOST || 'localhost'
+const port = parseInt(process.env.DB_PORT || process.env.PGPORT || '5432', 10)
+const database = process.env.DB_NAME || process.env.PGDATABASE || 'certificados'
+const user = process.env.DB_USER || process.env.PGUSER || 'postgres'
+const password = process.env.DB_PASSWORD || process.env.PGPASSWORD || 'postgres'
+
+const isLocal = !process.env.VERCEL && (!host || host === 'localhost')
 
 const pool = new Pool({
   host,
@@ -21,7 +24,7 @@ const pool = new Pool({
   user,
   password,
   connectionTimeoutMillis: 15000,
-  ssl: host === 'localhost' ? false : { rejectUnauthorized: false },
+  ...(isLocal ? {} : { ssl: { rejectUnauthorized: false } }),
 })
 
 // Crear tablas si no existen (al iniciar)

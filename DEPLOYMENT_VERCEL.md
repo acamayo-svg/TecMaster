@@ -54,18 +54,18 @@ Necesitas una base PostgreSQL en la nube (ej. Supabase). La conexión usa **solo
 
 ### Variables de entorno del Backend
 
-En ese proyecto → **Settings** → **Environment Variables**:
+En ese proyecto → **Settings** → **Environment Variables** (mismo patrón que Snappy):
 
 | Variable      | Valor |
 |---------------|--------|
-| `PGHOST`      | host de la base (ej. el que da Supabase) |
-| `PGPORT`      | puerto (ej. `5432` o `6543`) |
-| `PGDATABASE`  | `postgres` |
-| `PGUSER`      | usuario de la base |
-| `PGPASSWORD`  | contraseña de la base |
-| `CORS_ORIGIN` | URL del frontend (ver paso 3; ej. `https://tu-frontend.vercel.app`) |
+| `DB_HOST`     | host de la base (ej. el que da Supabase: `aws-0-us-east-1.pooler.supabase.com`) |
+| `DB_PORT`     | puerto (ej. `5432` para Session pooler o `6543` para Transaction) |
+| `DB_NAME`     | `postgres` |
+| `DB_USER`     | usuario (ej. `postgres.xxxx` en Supabase) |
+| `DB_PASSWORD` | contraseña de la base |
+| `CORS_ORIGIN` | URL del frontend (ej. `https://tu-frontend.vercel.app`) |
 
-No uses `DATABASE_URL`; el backend solo lee `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` y `PGPASSWORD`.
+También sirven `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` y `PGPASSWORD` si ya los tenías. No uses `DATABASE_URL`.
 
 Guarda y haz **Redeploy** si ya habías desplegado.
 
@@ -109,7 +109,7 @@ Asegúrate de que en el backend `CORS_ORIGIN` sea exactamente la URL del fronten
 
 ```bash
 cd backend
-# Crea backend/.env con: PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD (o copia desde Supabase)
+# Crea backend/.env con: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD (o PGHOST, PGPORT, etc.)
 npm install
 npm run dev
 ```

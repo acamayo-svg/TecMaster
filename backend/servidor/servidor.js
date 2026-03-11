@@ -35,9 +35,26 @@ const ORIGEN_CORS = process.env.CORS_ORIGIN || 'http://localhost:5173'
 app.use(cors({ origin: ORIGEN_CORS, credentials: true }))
 app.use(express.json())
 
-// Endpoint rápido para verificar que la función responde (sin tocar BD)
+// Endpoints sin BD (como Snappy): verificar que la función responde
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true })
+  res.json({ ok: true, mensaje: 'API Tec Master' })
+})
+app.get('/', (req, res) => {
+  res.json({ ok: true, mensaje: 'API Tec Master' })
+})
+
+// Middleware: inicializar BD una sola vez en serverless (patrón Snappy)
+let dbInicializada = false
+app.use(async (req, res, next) => {
+  if (dbInicializada) return next()
+  try {
+    await inicializarTablas()
+    dbInicializada = true
+    next()
+  } catch (err) {
+    console.error('Error al conectar con PostgreSQL:', err.message)
+    res.status(503).json({ mensaje: 'Base de datos no disponible.' })
+  }
 })
 
 function tokenAleatorio() {
