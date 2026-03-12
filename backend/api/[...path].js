@@ -1,23 +1,22 @@
 /**
- * Catch-all: /api/health, /api/cursos, etc. → misma app Express.
+ * Catch-all: responde /api/health al instante; el resto carga Express bajo demanda.
  */
-import app from '../servidor/servidor.js'
-
-const createHandler = (await import('serverless-http')).default
-const handler = createHandler(app)
-
-const TIMEOUT_MS = 25_000
+function getPath(req) {
+  const raw = req.url || req.path || ''
+  const path = raw.startsWith('http') ? new URL(raw).pathname : raw.split('?')[0]
+  return path || '/'
+}
 
 export default async function (req, res) {
-  const timeoutId = setTimeout(() => {
-    if (!res.headersSent) {
-      res.status(503).json({ error: 'Timeout', mensaje: 'La función tardó demasiado.' })
-    }
-  }, TIMEOUT_MS)
-  try {
-    await handler(req, res)
-  } finally {
-    clearTimeout(timeoutId)
+  const path = getPath(req)
+  if (path === '/' || path === '/api' || path === '/api/health') {
+    res.status(200).json({ ok: true, mensaje: 'API Tec Master' })
+    return
   }
+
+  const { default: app } = await import('../servidor/servidor.js')
+  const { default: createHandler } = await import('serverless-http')
+  const handler = createHandler(app)
+  await handler(req, res)
 }
 
