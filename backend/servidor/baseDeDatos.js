@@ -23,7 +23,7 @@ const pool = new Pool({
   database,
   user,
   password,
-  connectionTimeoutMillis: 15000,
+  connectionTimeoutMillis: 8000,
   ...(isLocal ? {} : { ssl: { rejectUnauthorized: false } }),
 })
 

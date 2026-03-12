@@ -35,7 +35,7 @@ const ORIGEN_CORS = process.env.CORS_ORIGIN || 'http://localhost:5173'
 app.use(cors({ origin: ORIGEN_CORS, credentials: true }))
 app.use(express.json())
 
-// Endpoints sin BD (como Snappy): verificar que la función responde
+// Endpoints sin BD: responden al instante (evitan 504 en Vercel)
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, mensaje: 'API Tec Master' })
 })
@@ -46,19 +46,32 @@ app.get('/', (req, res) => {
   res.json({ ok: true, mensaje: 'API Tec Master' })
 })
 
-// Middleware: inicializar BD una sola vez en serverless (patrón Snappy)
-let dbInicializada = false
-app.use(async (req, res, next) => {
-  if (dbInicializada) return next()
+// BD: inicializar solo cuando una ruta la necesite (no en middleware global)
+let dbReady = null
+async function ensureDb() {
+  if (dbReady === true) return
+  if (dbReady && dbReady.catch) {
+    await dbReady
+    return
+  }
+  dbReady = inicializarTablas()
+    .then(() => { dbReady = true })
+    .catch((err) => { dbReady = null; throw err })
+  await dbReady
+}
+
+async function requireDb(req, res, next) {
   try {
-    await inicializarTablas()
-    dbInicializada = true
+    await ensureDb()
     next()
   } catch (err) {
     console.error('Error al conectar con PostgreSQL:', err.message)
-    res.status(503).json({ mensaje: 'Base de datos no disponible.' })
+    if (!res.headersSent) res.status(503).json({ mensaje: 'Base de datos no disponible.' })
   }
-})
+}
+
+// Solo las rutas que siguen usan la BD; /, /api, /api/health no pasan por aquí
+app.use(requireDb)
 
 function tokenAleatorio() {
   return crypto.randomBytes(24).toString('hex')
