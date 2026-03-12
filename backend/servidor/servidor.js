@@ -119,11 +119,15 @@ function middlewareAuth(req, res, next) {
 // Lista de cursos disponibles desde la base de datos (público)
 app.get('/api/cursos', async (req, res) => {
   try {
-    const cursos = await obtenerCursosDisponibles()
+    const timeoutMs = 8000
+    const cursos = await Promise.race([
+      obtenerCursosDisponibles(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout ${timeoutMs}ms`)), timeoutMs)),
+    ])
     res.json(cursos)
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Error al cargar cursos.' })
+    res.status(503).json({ error: 'Error al cargar cursos.', detalle: err.message || String(err) })
   }
 })
 
