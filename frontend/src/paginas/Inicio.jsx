@@ -37,7 +37,7 @@ export default function Inicio() {
         <div className="inicio__hero-video-wrap">
           <video
             className="inicio__hero-video"
-            src="https://videos.pexels.com/video-files/11812964/11812964-hd_1920_1080_25fps.mp4"
+            src="/mastermind-video-banner-v2.mp4"
             autoPlay
             muted
             loop
