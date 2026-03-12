@@ -1,6 +1,4 @@
 import { applyCors, handleOptions } from './_cors.js'
-import { getPool } from './_db.js'
-import { requireAuth } from './_auth.js'
 
 function readJson(req) {
   return new Promise((resolve, reject) => {
@@ -27,6 +25,9 @@ export default async function handler(req, res) {
     res.status(405).json({ error: 'Método no permitido' })
     return
   }
+
+  const { getPool } = await import('./_db.js')
+  const { requireAuth } = await import('./_auth.js')
 
   try {
     const usuario = await requireAuth(req)
