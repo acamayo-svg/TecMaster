@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { apiCursosDisponibles, apiMisCursos, apiAprobarCurso, apiActualizarProgreso } from '../utilidades/api'
+import { apiCursosDisponibles, apiMisCursos, apiAprobarCurso } from '../utilidades/api'
 import Boton from '../componentes/Boton'
 import Tarjeta from '../componentes/Tarjeta'
 import '../estilos/Curso.css'
@@ -47,30 +47,17 @@ export default function Curso() {
     establecerInscripcion((prev) => (prev ? { ...prev, progreso: num } : prev))
   }
 
-  const alSoltarProgreso = async (e) => {
+  const alSoltarProgreso = (e) => {
     const input = e?.currentTarget ?? e?.target
     const num = input ? Math.min(100, Math.max(0, parseInt(input.value, 10) || 0)) : (inscripcion?.progreso ?? 0)
     if (num === progresoActual) return
-    establecerActualizandoProgreso(true)
-    try {
-      await apiActualizarProgreso(inscripcion.id, num)
-    } catch {
-      establecerInscripcion((prev) => (prev ? { ...prev, progreso: progresoActual } : prev))
-    } finally {
-      establecerActualizandoProgreso(false)
-    }
+    establecerInscripcion((prev) => (prev ? { ...prev, progreso: num } : prev))
   }
 
-  const simularProgreso = async (porcentaje) => {
+  const simularProgreso = (porcentaje) => {
     const num = porcentaje === 50 ? 50 : 100
     if (num === progresoActual) return
-    establecerActualizandoProgreso(true)
-    try {
-      await apiActualizarProgreso(inscripcion.id, num)
-      establecerInscripcion((prev) => (prev ? { ...prev, progreso: num } : prev))
-    } finally {
-      establecerActualizandoProgreso(false)
-    }
+    establecerInscripcion((prev) => (prev ? { ...prev, progreso: num } : prev))
   }
 
   const alConfirmarAprobar = async () => {
