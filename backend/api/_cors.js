@@ -1,15 +1,14 @@
 function getAllowedOrigin(req) {
-  const allowed = process.env.CORS_ORIGIN
+  // En Vercel las URLs de preview cambian. Para tokens Bearer (sin cookies),
+  // podemos reflejar el Origin para evitar bloqueos de CORS.
   const origin = req.headers?.origin
-  if (!allowed) return origin || '*'
-  return origin === allowed ? allowed : allowed
+  return origin || '*'
 }
 
 export function applyCors(req, res) {
   const allowOrigin = getAllowedOrigin(req)
   res.setHeader('Access-Control-Allow-Origin', allowOrigin)
   res.setHeader('Vary', 'Origin')
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 }
