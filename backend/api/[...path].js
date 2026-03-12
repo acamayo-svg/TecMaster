@@ -1,13 +1,23 @@
 /**
- * Catch-all serverless handler para Vercel.
- * Permite que /api/* llegue a la misma app Express conservando la ruta.
+ * Catch-all: /api/health, /api/cursos, etc. → misma app Express.
  */
 import app from '../servidor/servidor.js'
 
 const createHandler = (await import('serverless-http')).default
 const handler = createHandler(app)
 
+const TIMEOUT_MS = 25_000
+
 export default async function (req, res) {
-  return handler(req, res)
+  const timeoutId = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(503).json({ error: 'Timeout', mensaje: 'La función tardó demasiado.' })
+    }
+  }, TIMEOUT_MS)
+  try {
+    await handler(req, res)
+  } finally {
+    clearTimeout(timeoutId)
+  }
 }
 
