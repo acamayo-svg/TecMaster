@@ -143,7 +143,7 @@ export async function apiCambiarContraseña(contraseñaActual, contraseñaNueva)
 }
 
 export async function apiActualizarProgreso(idInscripcion, progreso) {
-  const res = await fetch(`${URL_BASE}/api/inscripciones`, {
+  const res = await fetchConTimeout(`${URL_BASE}/api/inscripciones`, {
     method: 'PATCH',
     headers: cabeceras(true),
     body: JSON.stringify({ idInscripcion, progreso }),
