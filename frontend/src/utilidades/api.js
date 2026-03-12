@@ -143,10 +143,10 @@ export async function apiCambiarContraseña(contraseñaActual, contraseñaNueva)
 }
 
 export async function apiActualizarProgreso(idInscripcion, progreso) {
-  const res = await fetch(`${URL_BASE}/api/inscripciones/${idInscripcion}`, {
+  const res = await fetch(`${URL_BASE}/api/inscripciones`, {
     method: 'PATCH',
     headers: cabeceras(true),
-    body: JSON.stringify({ progreso }),
+    body: JSON.stringify({ idInscripcion, progreso }),
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(data.error || 'Error al actualizar progreso')
