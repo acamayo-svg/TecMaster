@@ -24,8 +24,15 @@ const pool = new Pool({
   user,
   password,
   connectionTimeoutMillis: 8000,
+  // Evita "colgados" largos: corta queries lentas
+  query_timeout: 8000,
   ...(isLocal ? {} : { ssl: { rejectUnauthorized: false } }),
 })
+
+export async function pingDb() {
+  const res = await pool.query('SELECT 1 AS ok')
+  return res.rows?.[0]?.ok === 1
+}
 
 // Crear tablas si no existen (al iniciar)
 export async function inicializarTablas() {

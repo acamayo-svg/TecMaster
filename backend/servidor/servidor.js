@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import {
   inicializarTablas,
+  pingDb,
   obtenerUsuarioPorCorreo,
   obtenerUsuarioPorToken,
   crearUsuario,
@@ -54,9 +55,16 @@ async function ensureDb() {
     await dbReady
     return
   }
-  dbReady = inicializarTablas()
-    .then(() => { dbReady = true })
-    .catch((err) => { dbReady = null; throw err })
+  // En Vercel NO ejecutamos DDL pesado; solo verificamos conexión.
+  const tarea = process.env.VERCEL ? pingDb() : inicializarTablas()
+  dbReady = tarea
+    .then(() => {
+      dbReady = true
+    })
+    .catch((err) => {
+      dbReady = null
+      throw err
+    })
   await dbReady
 }
 
@@ -72,6 +80,17 @@ async function requireDb(req, res, next) {
 
 // Solo las rutas que siguen usan la BD; /, /api, /api/health no pasan por aquí
 app.use(requireDb)
+
+// Diagnóstico rápido de BD (devuelve error real en <10s)
+app.get('/api/db-ping', async (req, res) => {
+  try {
+    const ok = await pingDb()
+    res.json({ ok })
+  } catch (err) {
+    console.error('DB ping error:', err)
+    res.status(503).json({ ok: false, detalle: err.message || String(err) })
+  }
+})
 
 function tokenAleatorio() {
   return crypto.randomBytes(24).toString('hex')
