@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { apiCursosDisponibles, apiMisCursos, apiAprobarCurso } from '../utilidades/api'
+import { apiCursosDisponibles, apiMisCursos, apiAprobarCurso, apiActualizarProgreso } from '../utilidades/api'
 import Boton from '../componentes/Boton'
 import Tarjeta from '../componentes/Tarjeta'
 import '../estilos/Curso.css'
@@ -47,17 +47,25 @@ export default function Curso() {
     establecerInscripcion((prev) => (prev ? { ...prev, progreso: num } : prev))
   }
 
+  const guardarProgreso = (id, num) => {
+    apiActualizarProgreso(id, num).catch(() => {
+      // si falla el guardado remoto, mantenemos al menos el progreso visual
+    })
+  }
+
   const alSoltarProgreso = (e) => {
     const input = e?.currentTarget ?? e?.target
     const num = input ? Math.min(100, Math.max(0, parseInt(input.value, 10) || 0)) : (inscripcion?.progreso ?? 0)
     if (num === progresoActual) return
     establecerInscripcion((prev) => (prev ? { ...prev, progreso: num } : prev))
+    guardarProgreso(inscripcion.id, num)
   }
 
   const simularProgreso = (porcentaje) => {
     const num = porcentaje === 50 ? 50 : 100
     if (num === progresoActual) return
     establecerInscripcion((prev) => (prev ? { ...prev, progreso: num } : prev))
+    guardarProgreso(inscripcion.id, num)
   }
 
   const alConfirmarAprobar = async () => {

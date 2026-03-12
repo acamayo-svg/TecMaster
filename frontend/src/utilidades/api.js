@@ -86,9 +86,10 @@ export async function apiInscribirCurso(idCurso) {
 }
 
 export async function apiAprobarCurso(idCurso) {
-  const res = await fetch(`${URL_BASE}/api/cursos/${idCurso}/aprobar`, {
+  const res = await fetch(`${URL_BASE}/api/cursos/aprobar`, {
     method: 'POST',
     headers: cabeceras(true),
+    body: JSON.stringify({ idCurso }),
   })
   const datos = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(datos.error || 'Error al aprobar')
