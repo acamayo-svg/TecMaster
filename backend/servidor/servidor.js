@@ -340,7 +340,34 @@ app.post('/api/cursos/inscribir', middlewareAuth, async (req, res) => {
   }
 })
 
-// Aprobar curso y generar certificado
+// Aprobar curso y generar certificado (versión body: POST /api/cursos/aprobar { idCurso })
+app.post('/api/cursos/aprobar', middlewareAuth, async (req, res) => {
+  try {
+    const { idCurso } = req.body || {}
+    if (!idCurso) {
+      return res.status(400).json({ error: 'Falta idCurso.' })
+    }
+    const inscripciones = await obtenerInscripcionesPorUsuario(req.usuario.id)
+    const inscripcion = inscripciones.find((i) => i.idCurso === String(idCurso))
+    if (!inscripcion) {
+      return res.status(404).json({ error: 'No estás inscrito en este curso.' })
+    }
+    if (inscripcion.estado === 'aprobado') {
+      const certificado = await obtenerCertificadoPorId(inscripcion.idCertificado)
+      return res.json({ inscripcion, certificado })
+    }
+    const resultado = await aprobarInscripcion(inscripcion.id, req.usuario.id)
+    if (!resultado) {
+      return res.status(500).json({ error: 'Error al aprobar.' })
+    }
+    res.json(resultado)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Error al aprobar.' })
+  }
+})
+
+// Aprobar curso y generar certificado (versión con parámetro en la URL)
 app.post('/api/cursos/:idCurso/aprobar', middlewareAuth, async (req, res) => {
   try {
     const { idCurso } = req.params
