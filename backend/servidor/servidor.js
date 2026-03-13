@@ -272,7 +272,27 @@ app.post('/api/mi-perfil/cambiar-contrasena', middlewareAuth, async (req, res) =
   }
 })
 
-// Actualizar progreso de una inscripción (solo el dueño)
+// Actualizar progreso: body { idInscripcion, progreso } (frontend y Vercel)
+app.patch('/api/inscripciones', middlewareAuth, async (req, res) => {
+  try {
+    const { idInscripcion, progreso } = req.body || {}
+    const id = String(idInscripcion ?? req.params?.id ?? '').trim()
+    if (!id) {
+      return res.status(400).json({ error: 'Falta id de inscripción.' })
+    }
+    const num = Math.min(100, Math.max(0, parseInt(progreso, 10) || 0))
+    const actualizado = await actualizarProgresoInscripcion(id, req.usuario.id, num)
+    if (!actualizado) {
+      return res.status(404).json({ error: 'Inscripción no encontrada o no tienes permiso.' })
+    }
+    res.json({ ok: true })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Error al actualizar progreso.' })
+  }
+})
+
+// Actualizar progreso por URL (alternativa): PATCH /api/inscripciones/:id
 app.patch('/api/inscripciones/:id', middlewareAuth, async (req, res) => {
   try {
     const { id } = req.params
