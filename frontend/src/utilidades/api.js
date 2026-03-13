@@ -61,13 +61,13 @@ export async function apiIniciarSesion(correo, contraseña) {
 }
 
 export async function apiCursosDisponibles() {
-  const res = await fetch(`${URL_BASE}/api/cursos`, { headers: cabeceras() })
+  const res = await fetchConTimeout(`${URL_BASE}/api/cursos`, { headers: cabeceras() })
   if (!res.ok) throw new Error('Error al cargar cursos')
   return res.json()
 }
 
 export async function apiMisCursos() {
-  const res = await fetch(`${URL_BASE}/api/mi-perfil/cursos`, {
+  const res = await fetchConTimeout(`${URL_BASE}/api/mi-perfil/cursos`, {
     headers: cabeceras(true),
   })
   if (!res.ok) throw new Error('Error al cargar tus cursos')

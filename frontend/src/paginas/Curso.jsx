@@ -14,6 +14,7 @@ export default function Curso() {
   const [mostrarConfirmarAprobar, establecerMostrarConfirmarAprobar] = useState(false)
   const [aprobando, establecerAprobando] = useState(false)
   const [actualizandoProgreso, establecerActualizandoProgreso] = useState(false)
+  const [errorProgreso, establecerErrorProgreso] = useState(null)
 
   useEffect(() => {
     let cancelado = false
@@ -48,9 +49,19 @@ export default function Curso() {
   }
 
   const guardarProgreso = (id, num) => {
-    apiActualizarProgreso(id, num).catch(() => {
-      // si falla el guardado remoto, mantenemos al menos el progreso visual
-    })
+    const idInscripcion = id ?? inscripcion?.id
+    if (!idInscripcion) {
+      establecerErrorProgreso('No se pudo identificar la inscripción. Recarga la página.')
+      return
+    }
+    establecerErrorProgreso(null)
+    establecerActualizandoProgreso(true)
+    apiActualizarProgreso(idInscripcion, num)
+      .then(() => { /* guardado correcto */ })
+      .catch((err) => {
+        establecerErrorProgreso(err?.message || 'No se pudo guardar el progreso. Revisa tu conexión.')
+      })
+      .finally(() => establecerActualizandoProgreso(false))
   }
 
   const alSoltarProgreso = (e) => {
@@ -127,6 +138,11 @@ export default function Curso() {
                 Mi progreso: <strong>{progresoActual}%</strong>
                 {actualizandoProgreso && <span className="curso__progreso-guardando"> Guardando…</span>}
               </label>
+              {errorProgreso && (
+                <p className="curso__error-progreso" role="alert">
+                  {errorProgreso}
+                </p>
+              )}
               <input
                 type="range"
                 min="0"

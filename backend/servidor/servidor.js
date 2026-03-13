@@ -31,9 +31,13 @@ import { validarCadenaCertificado, obtenerDetalleCadena } from './cadenaCertific
 
 const app = express()
 const PUERTO = process.env.PORT || 3001
-const ORIGEN_CORS = process.env.CORS_ORIGIN || 'http://localhost:5173'
 
-app.use(cors({ origin: ORIGEN_CORS, credentials: true }))
+// Aceptar el origen de la petición (producción, preview de Vercel, etc.) para evitar bloqueos CORS
+function origenCors(origin, callback) {
+  const permitido = origin || process.env.CORS_ORIGIN || '*'
+  callback(null, permitido)
+}
+app.use(cors({ origin: origenCors, credentials: false }))
 app.use(express.json())
 
 // Endpoints sin BD: responden al instante (evitan 504 en Vercel)

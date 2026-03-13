@@ -75,6 +75,15 @@
   color: var(--color-texto-suave);
 }
 
+.curso__error-progreso {
+  font-size: 0.9rem;
+  color: var(--color-error, #c00);
+  margin: 0.5rem 0 0;
+  padding: 0.5rem;
+  background: var(--color-fondo-secundario);
+  border-radius: 4px;
+}
+
 .curso__progreso-slider {
   width: 100%;
   height: 8px;

@@ -1,65 +1,64 @@
-# Despliegue en Vercel + Supabase — Plataforma Tec Master
+# Despliegue — Plataforma Tec Master
 
-Todo está pensado para **producción**: frontend y API en Vercel, base de datos en Supabase. No se usa configuración local (.env en el repo).
-
+Frontend en Vercel, base de datos en Supabase. El **backend** puede ir en Vercel (1 función) o, si se cuelga con la BD, en **Railway o Render** (servidor siempre encendido).
+![1773371264321](image/DESPLIEGUE/1773371264321.png)
 ## Resumen
 
-- **Frontend**: proyecto Vercel, raíz `frontend/`. Build: `npm run build`, output `dist`.
-- **Backend**: proyecto Vercel, raíz `backend/`. **Una sola función serverless** (`api/[[...path]].js`) que ejecuta toda la app Express, para no superar el límite del plan Hobby (12 funciones). Base de datos PostgreSQL en Supabase.
+- **Frontend**: Vercel, raíz `frontend/`. Build: `npm run build`, output `dist`.
+- **Backend**: puede ser **Vercel** (1 función serverless) o **Railway / Render** (servidor Node fijo). Supabase para PostgreSQL.
+- **CORS**: el backend acepta el origen de cada petición (producción y previews de Vercel), así que no deberías ver errores de CORS por URL de preview.
 
-## 1. Backend (API) en Vercel
+---
 
-1. En Vercel, crea un proyecto y conecta el repositorio de GitHub.
-2. **Root Directory**: `backend`.
-3. **Build Command**: vacío o `npm run build` si lo tienes. **Output Directory**: por defecto.
-4. **Variables de entorno** (en Vercel → Settings → Environment Variables). Usa los datos de Supabase (Connection string / Database settings):
+## Opción A: Backend en Railway o Render (recomendado si en Vercel se cuelga)
 
-   | Variable       | Dónde sacarlo (Supabase) |
-   |----------------|---------------------------|
-   | `DB_HOST`      | Host de la base (ej. `db.xxx.supabase.co`) |
-   | `DB_PORT`      | `5432` |
-   | `DB_NAME`      | `postgres` (o el nombre de tu proyecto) |
-   | `DB_USER`      | Usuario de la base |
-   | `DB_PASSWORD`  | Contraseña de la base |
-   | `CORS_ORIGIN`  | URL del frontend en Vercel, **sin barra final** (ej. `https://tu-frontend.vercel.app`) |
+Si en Vercel el backend tarda mucho, da timeout o no deja registrar/iniciar sesión, suele ser por **cold start** y la **primera conexión a la BD** en una función serverless. En **Railway** o **Render** el backend corre como **servidor siempre encendido**: no hay cold start y la conexión a Supabase se mantiene, así que registro y login responden bien.
 
-   También sirven: `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`.
+### Railway (tier gratis limitado; luego bajo costo)
 
-5. Deploy. Anota la URL del backend (ej. `https://tu-backend.vercel.app`).
+1. Entra en [railway.app](https://railway.app), inicia sesión con GitHub.
+2. **New Project** → **Deploy from GitHub repo** → elige tu repo.
+3. En el servicio, **Settings** → **Root Directory**: `backend`.
+4. **Variables**: añade `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` (datos de Supabase). Opcional: `CORS_ORIGIN` = URL del frontend.
+5. **Deploy**. Railway asigna un puerto; usa `PORT` automáticamente (el backend ya usa `process.env.PORT`).
+6. En **Settings** → **Networking** → **Generate Domain**. Copia la URL (ej. `https://tu-proyecto.up.railway.app`).
+7. En el **frontend en Vercel**, en Variables de entorno pon `VITE_API_URL` = esa URL (sin barra final) y haz **Redeploy**.
 
-## 2. Frontend en Vercel
+### Render (tier gratis con límites)
 
-1. Otro proyecto en Vercel, mismo repositorio.
-2. **Root Directory**: `frontend`.
-3. **Build Command**: `npm run build`. **Output Directory**: `dist`.
-4. **Variable de entorno** en Vercel:
+1. Entra en [render.com](https://render.com), inicia sesión con GitHub.
+2. **New** → **Web Service** → conecta el repo.
+3. **Root Directory**: `backend`. **Build Command**: `npm install`. **Start Command**: `npm start`.
+4. **Environment**: añade `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`. Opcional: `CORS_ORIGIN`.
+5. **Create Web Service**. Render te da una URL (ej. `https://tu-servicio.onrender.com`).
+6. En el **frontend en Vercel**, pon `VITE_API_URL` = esa URL (sin barra final) y **Redeploy**.
 
-   | Variable        | Valor |
-   |-----------------|--------|
-   | `VITE_API_URL`  | URL del backend (ej. `https://tu-backend.vercel.app`) **Sin barra final.** |
+En ambas plataformas el backend usa `npm start` → `node servidor/servidor.js` y lee las variables de Supabase. No hay límite de “funciones” ni cold start por request.
 
-5. Guardar y hacer **Redeploy** para que el build use la variable.
+---
 
-## 3. Comportamiento en producción
+## Opción B: Backend en Vercel (1 función)
 
-- El frontend solo llama a la API si `VITE_API_URL` está definida en el build de Vercel.
-- CORS: el backend usa `CORS_ORIGIN` (o refleja el `Origin`) y cabeceras en `backend/vercel.json`.
-- El progreso del curso se guarda en Supabase vía `PATCH /api/inscripciones`. La conexión desde Vercel a Supabase usa SSL por defecto en el código.
+Si quieres todo en Vercel:
 
-## 4. Si hay 404, CORS o lentitud
+1. Proyecto en Vercel, **Root Directory**: `backend`.
+2. Variables de entorno: `DB_*` (o `PG*`) de Supabase y opcionalmente `CORS_ORIGIN`.
+3. La única función es `api/[[...path]].js` (Express). CORS está configurado para aceptar el origen de la petición (incluidas URLs de preview).
+4. Si la primera petición (login, registro) tarda mucho o da timeout, es por cold start + conexión a BD; en ese caso usa **Opción A** (Railway/Render) para el backend.
 
-- **404**: Revisa que `VITE_API_URL` sea la URL correcta del proyecto backend y sin barra final.
-- **CORS**: `CORS_ORIGIN` en el backend debe ser exactamente la URL del frontend (con `https://`).
-- **Lentitud / timeouts**: Revisa en Supabase que la base permita conexiones desde internet y que los datos de conexión en Vercel sean los correctos.
+---
 
-## 5. Límite de 12 funciones (plan Hobby) y otras plataformas
+## Frontend en Vercel
 
-En Vercel **plan Hobby** (gratis) solo puedes tener **12 funciones serverless** por despliegue. Este proyecto quedó con **1 función** (`api/[[...path]].js`) que atiende todas las rutas con Express, así que no deberías volver a ver ese error.
+1. Otro proyecto en Vercel, **Root Directory**: `frontend`.
+2. **Build**: `npm run build`. **Output**: `dist`.
+3. **Variable de entorno**: `VITE_API_URL` = URL del backend (Railway, Render o Vercel), **sin barra final**.
+4. Después de cambiar `VITE_API_URL`, haz **Redeploy** para que el build use la nueva URL.
 
-Si en el futuro quisieras usar otra plataforma gratuita o de bajo costo:
+---
 
-- **Netlify**: permite funciones serverless (Netlify Functions) con un tier gratis generoso. Puedes desplegar el mismo backend como una sola función en `netlify/functions/api.js` y el frontend en el mismo proyecto o en otro.
-- **Railway** / **Render**: ofrecen planes gratuitos o de pocos dólares para **un servidor Node que corre todo el tiempo** (no serverless). Ahí desplegarías solo `backend/servidor/servidor.js` como servidor Express y no tendrías límite de “funciones”.
-- **Supabase** (donde ya tienes la BD) no sustituye el backend completo: solo la base de datos y opcionalmente Edge Functions; la API de Express seguiría en Vercel, Netlify o Railway.
+## Si hay 404, CORS o lentitud
 
-Con la configuración actual (1 función en Vercel + Supabase) puedes seguir en el plan Hobby sin pagar.
+- **404**: Comprueba que `VITE_API_URL` sea la URL correcta del backend y sin barra final.
+- **CORS**: El backend ya acepta el origen de la petición; si usas preview de Vercel (`*-xxx.vercel.app`), debería funcionar. Si no, en Railway/Render añade `CORS_ORIGIN` o deja que siga reflejando el origen.
+- **Lentitud / timeouts en Vercel**: Despliega el backend en Railway o Render (Opción A).
