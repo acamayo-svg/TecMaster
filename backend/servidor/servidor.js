@@ -28,6 +28,7 @@ import {
   obtenerInscripcionConHashes,
 } from './baseDeDatos.js'
 import { validarCadenaCertificado, obtenerDetalleCadena } from './cadenaCertificados.js'
+import { conectarMongo, mongoConfigurado, obtenerNombreDbMongo, pingMongo } from './mongo.js'
 
 const app = express()
 const PUERTO = process.env.PORT || 3001
@@ -49,6 +50,26 @@ app.get('/api', (req, res) => {
 })
 app.get('/', (req, res) => {
   res.json({ ok: true, mensaje: 'API Tec Master' })
+})
+
+// Estado de conexión MongoDB (Atlas) sin depender de PostgreSQL.
+app.get('/api/mongo/health', (req, res) => {
+  res.json({
+    ok: true,
+    configurado: mongoConfigurado(),
+    db: obtenerNombreDbMongo(),
+  })
+})
+
+// Ping real contra MongoDB; útil para validar la conexión antes de migrar consultas.
+app.get('/api/mongo/ping', async (req, res) => {
+  try {
+    await conectarMongo()
+    const ok = await pingMongo()
+    res.json({ ok, db: obtenerNombreDbMongo() })
+  } catch (err) {
+    res.status(503).json({ ok: false, detalle: err.message || String(err) })
+  }
 })
 
 // BD: inicializar solo cuando una ruta la necesite (no en middleware global)
