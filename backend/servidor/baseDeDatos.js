@@ -5,8 +5,16 @@ import {
   calcularHashCursoCompletado,
   calcularHashCertificado,
 } from './cadenaCertificados.js'
+import { mongoConfigurado } from './mongo.js'
+import * as usuariosMongo from './usuariosMongo.js'
 
 const { Pool } = pg
+
+/** Si hay URI de Atlas y no se fuerza desactivar, los usuarios viven en Mongo (resto sigue en PostgreSQL). */
+function usarMongoParaUsuarios() {
+  if (process.env.USUARIOS_EN_MONGO === 'false') return false
+  return mongoConfigurado()
+}
 
 // Mismo patrón que Snappy: DB_* (Vercel/Supabase) con fallback a PG_* y local
 const host = process.env.DB_HOST || process.env.PGHOST || 'localhost'
@@ -196,6 +204,9 @@ function filaACertificado(fila) {
 }
 
 export async function obtenerUsuarioPorCorreo(correo) {
+  if (usarMongoParaUsuarios()) {
+    return usuariosMongo.obtenerUsuarioPorCorreo(correo)
+  }
   const res = await pool.query(
     'SELECT id, nombre, correo, contraseña_hash, token, foto_perfil, tipo_documento FROM usuarios WHERE LOWER(correo) = LOWER($1)',
     [correo]
@@ -204,6 +215,9 @@ export async function obtenerUsuarioPorCorreo(correo) {
 }
 
 export async function obtenerUsuarioPorToken(token) {
+  if (usarMongoParaUsuarios()) {
+    return usuariosMongo.obtenerUsuarioPorToken(token)
+  }
   const res = await pool.query(
     'SELECT id, nombre, correo, token, foto_perfil, tipo_documento FROM usuarios WHERE token = $1',
     [token]
@@ -221,6 +235,9 @@ export async function obtenerUsuarioPorToken(token) {
 }
 
 export async function crearUsuario({ id, nombre, correo, contraseñaHash, token, tipoDocumento }) {
+  if (usarMongoParaUsuarios()) {
+    return usuariosMongo.crearUsuario({ id, nombre, correo, contraseñaHash, token, tipoDocumento })
+  }
   const idNormalizado = String(id).trim()
   await pool.query(
     `INSERT INTO usuarios (id, nombre, correo, contraseña_hash, token, tipo_documento)
@@ -238,6 +255,9 @@ export async function crearUsuario({ id, nombre, correo, contraseñaHash, token,
 }
 
 export async function actualizarTokenUsuario(idUsuario, token) {
+  if (usarMongoParaUsuarios()) {
+    return usuariosMongo.actualizarTokenUsuario(idUsuario, token)
+  }
   const res = await pool.query(
     'UPDATE usuarios SET token = $1 WHERE id = $2 RETURNING id, nombre, correo, token, foto_perfil, tipo_documento',
     [token, idUsuario]
@@ -396,11 +416,17 @@ export async function obtenerInscripcionConHashes(idInscripcion) {
 }
 
 export async function obtenerNombreCompletoUsuario(idUsuario) {
+  if (usarMongoParaUsuarios()) {
+    return usuariosMongo.obtenerNombreCompletoUsuario(idUsuario)
+  }
   const res = await pool.query('SELECT nombre FROM usuarios WHERE id = $1', [idUsuario])
   return res.rows[0] ? res.rows[0].nombre : null
 }
 
 export async function actualizarFotoPerfil(idUsuario, fotoPerfil) {
+  if (usarMongoParaUsuarios()) {
+    return usuariosMongo.actualizarFotoPerfil(idUsuario, fotoPerfil)
+  }
   const res = await pool.query(
     'UPDATE usuarios SET foto_perfil = $1 WHERE id = $2 RETURNING id, nombre, correo, token, foto_perfil, tipo_documento',
     [fotoPerfil || null, idUsuario]
@@ -419,6 +445,9 @@ export async function actualizarFotoPerfil(idUsuario, fotoPerfil) {
 
 export async function actualizarNombreUsuario(idUsuario, nombre) {
   if (!nombre || String(nombre).trim().length === 0) return null
+  if (usarMongoParaUsuarios()) {
+    return usuariosMongo.actualizarNombreUsuario(idUsuario, nombre)
+  }
   const res = await pool.query(
     'UPDATE usuarios SET nombre = $1 WHERE id = $2 RETURNING id, nombre, correo, token, foto_perfil, tipo_documento',
     [nombre.trim(), idUsuario]
@@ -436,6 +465,9 @@ export async function actualizarNombreUsuario(idUsuario, nombre) {
 }
 
 export async function obtenerUsuarioPorIdParaContraseña(idUsuario) {
+  if (usarMongoParaUsuarios()) {
+    return usuariosMongo.obtenerUsuarioPorIdParaContraseña(idUsuario)
+  }
   const res = await pool.query(
     'SELECT id, contraseña_hash FROM usuarios WHERE id = $1',
     [idUsuario]
@@ -444,6 +476,9 @@ export async function obtenerUsuarioPorIdParaContraseña(idUsuario) {
 }
 
 export async function actualizarContraseña(idUsuario, nuevaContraseñaHash) {
+  if (usarMongoParaUsuarios()) {
+    return usuariosMongo.actualizarContraseña(idUsuario, nuevaContraseñaHash)
+  }
   await pool.query(
     'UPDATE usuarios SET contraseña_hash = $1 WHERE id = $2',
     [nuevaContraseñaHash, idUsuario]
