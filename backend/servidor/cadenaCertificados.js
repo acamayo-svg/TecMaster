@@ -1,17 +1,5 @@
 import crypto from 'crypto'
 
-/**
- * Cadena de bloques para validar certificados (estilo blockchain).
- * Cada bloque incluye datos y el hash del bloque anterior; el hash propio se calcula
- * a partir de: índice + fecha + datos + hashAnterior.
- *
- * Bloques:
- * 0 - Genesis: nombre completo + cédula + id_curso + fecha
- * 1 - Inscripción: id_inscripcion + fecha_inscripcion + hash_genesis
- * 2 - Curso completado: id_inscripcion + fecha_aprobacion + progreso 100 + hash_inscripcion
- * 3 - Certificado: id_certificado + codigo_verificacion + fecha_emision + hash_curso_completado
- */
-
 function sha256(texto) {
   return crypto.createHash('sha256').update(String(texto), 'utf8').digest('hex')
 }
@@ -103,7 +91,7 @@ export function validarCadenaCertificado(inscripcion, certificado, nombreComplet
 
 /**
  * Devuelve la cadena de hashes completa para mostrar como log (etiqueta + datos + hash por paso).
- * Solo incluye pasos que existan en inscripción/certificado.
+oo 
  * @returns {Array<{ paso: number, etiqueta: string, descripcionDatos: string, datos: string, hash: string }>}
  */
 export function obtenerDetalleCadena(inscripcion, certificado, nombreCompleto) {

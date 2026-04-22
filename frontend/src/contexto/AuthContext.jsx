@@ -19,6 +19,7 @@ export function ProveedorAuth({ children }) {
       correo: datosUsuario.correo,
       token: datosUsuario.token,
       fotoPerfil: datosUsuario.fotoPerfil ?? null,
+      tipoDocumento: datosUsuario.tipoDocumento ?? null,
     }
     establecerUsuario(paraGuardar)
     localStorage.setItem('plataforma-certificados-usuario', JSON.stringify(paraGuardar))

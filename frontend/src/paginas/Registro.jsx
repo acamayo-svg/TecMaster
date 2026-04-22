@@ -4,12 +4,14 @@ import { useAuth } from '../contexto/AuthContext'
 import { apiRegistro } from '../utilidades/api'
 import Boton from '../componentes/Boton'
 import CampoFormulario from '../componentes/CampoFormulario'
+import CampoTipoDocumento from '../componentes/CampoTipoDocumento'
 import Tarjeta from '../componentes/Tarjeta'
 import '../estilos/FormularioPagina.css'
 
 export default function Registro() {
   const [nombre, establecerNombre] = useState('')
   const [correo, establecerCorreo] = useState('')
+  const [tipoDocumento, establecerTipoDocumento] = useState('')
   const [cedula, establecerCedula] = useState('')
   const [contraseña, establecerContraseña] = useState('')
   const [repetirContraseña, establecerRepetirContraseña] = useState('')
@@ -22,8 +24,8 @@ export default function Registro() {
     e.preventDefault()
     establecerError('')
 
-    if (!nombre.trim() || !correo.trim() || !cedula.trim() || !contraseña || !repetirContraseña) {
-      establecerError('Completa todos los campos.')
+    if (!nombre.trim() || !tipoDocumento || !correo.trim() || !cedula.trim() || !contraseña || !repetirContraseña) {
+      establecerError('Completa todos los campos, incluido el tipo de documento.')
       return
     }
     if (contraseña !== repetirContraseña) {
@@ -37,7 +39,7 @@ export default function Registro() {
 
     establecerCargando(true)
     try {
-      const datos = await apiRegistro(nombre.trim(), correo.trim(), contraseña, cedula.trim())
+      const datos = await apiRegistro(nombre.trim(), correo.trim(), contraseña, cedula.trim(), tipoDocumento)
       iniciarSesion(datos)
       navegar('/area-usuario')
     } catch (err) {
@@ -62,6 +64,11 @@ export default function Registro() {
             valor={nombre}
             onChange={(e) => establecerNombre(e.target.value)}
             placeholder="Tu nombre"
+            requerido
+          />
+          <CampoTipoDocumento
+            valor={tipoDocumento}
+            onChange={establecerTipoDocumento}
             requerido
           />
           <CampoFormulario

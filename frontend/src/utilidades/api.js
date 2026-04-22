@@ -38,11 +38,11 @@ function cabeceras(conToken = false) {
   return cabeceras
 }
 
-export async function apiRegistro(nombre, correo, contraseña, cedula) {
+export async function apiRegistro(nombre, correo, contraseña, cedula, tipoDocumento) {
   const res = await fetchConTimeout(`${URL_BASE}/api/usuarios/registro`, {
     method: 'POST',
     headers: cabeceras(),
-    body: JSON.stringify({ nombre, correo, contraseña, cedula }),
+    body: JSON.stringify({ nombre, correo, contraseña, cedula, tipoDocumento }),
   })
   const datos = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(datos.error || 'Error al registrarse')

@@ -135,12 +135,18 @@ app.get('/api/cursos', async (req, res) => {
   }
 })
 
+const TIPOS_DOCUMENTO_VALIDOS = new Set(['CC', 'TI', 'CE', 'PEP', 'PPT'])
+
 // Registro
 app.post('/api/usuarios/registro', async (req, res) => {
   try {
-    const { nombre, correo, contraseña, cedula } = req.body || {}
+    const { nombre, correo, contraseña, cedula, tipoDocumento } = req.body || {}
     if (!nombre || !correo || !contraseña || !cedula) {
       return res.status(400).json({ error: 'Faltan nombre, correo, contraseña o identificación.' })
+    }
+    const tipoDoc = String(tipoDocumento || '').trim().toUpperCase()
+    if (!tipoDoc || !TIPOS_DOCUMENTO_VALIDOS.has(tipoDoc)) {
+      return res.status(400).json({ error: 'Selecciona un tipo de documento válido.' })
     }
 
     const cedulaNormalizada = String(cedula).trim()
@@ -166,13 +172,21 @@ app.post('/api/usuarios/registro', async (req, res) => {
 
     const contraseñaHash = await bcrypt.hash(contraseña, 10)
     const token = tokenAleatorio()
-    const usuario = await crearUsuario({ id: cedulaNormalizada, nombre, correo, contraseñaHash, token })
+    const usuario = await crearUsuario({
+      id: cedulaNormalizada,
+      nombre,
+      correo,
+      contraseñaHash,
+      token,
+      tipoDocumento: tipoDoc,
+    })
     res.status(201).json({
       id: usuario.id,
       nombre: usuario.nombre,
       correo: usuario.correo,
       token: usuario.token,
       fotoPerfil: usuario.fotoPerfil ?? null,
+      tipoDocumento: usuario.tipoDocumento ?? null,
     })
   } catch (err) {
     console.error(err)
@@ -203,6 +217,7 @@ app.post('/api/usuarios/iniciar-sesion', async (req, res) => {
       correo: actualizado.correo,
       token: actualizado.token,
       fotoPerfil: actualizado.fotoPerfil ?? null,
+      tipoDocumento: actualizado.tipoDocumento ?? null,
     })
   } catch (err) {
     console.error(err)

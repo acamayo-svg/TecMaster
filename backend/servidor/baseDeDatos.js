@@ -90,6 +90,9 @@ export async function inicializarTablas() {
       await cliente.query(`ALTER TABLE usuarios ADD COLUMN foto_perfil TEXT;`)
     } catch (_) { /* la columna ya existe */ }
     try {
+      await cliente.query(`ALTER TABLE usuarios ADD COLUMN tipo_documento VARCHAR(96);`)
+    } catch (_) { /* ya existe */ }
+    try {
       await cliente.query(`ALTER TABLE inscripciones ADD COLUMN hash_genesis VARCHAR(64);`)
     } catch (_) { /* ya existe */ }
     try {
@@ -156,6 +159,7 @@ function filaAUsuario(fila) {
     contraseñaHash: fila.contraseña_hash,
     token: fila.token,
     fotoPerfil: fila.foto_perfil || null,
+    tipoDocumento: fila.tipo_documento || null,
   }
 }
 
@@ -193,7 +197,7 @@ function filaACertificado(fila) {
 
 export async function obtenerUsuarioPorCorreo(correo) {
   const res = await pool.query(
-    'SELECT id, nombre, correo, contraseña_hash, token, foto_perfil FROM usuarios WHERE LOWER(correo) = LOWER($1)',
+    'SELECT id, nombre, correo, contraseña_hash, token, foto_perfil, tipo_documento FROM usuarios WHERE LOWER(correo) = LOWER($1)',
     [correo]
   )
   return filaAUsuario(res.rows[0]) || null
@@ -201,7 +205,7 @@ export async function obtenerUsuarioPorCorreo(correo) {
 
 export async function obtenerUsuarioPorToken(token) {
   const res = await pool.query(
-    'SELECT id, nombre, correo, token, foto_perfil FROM usuarios WHERE token = $1',
+    'SELECT id, nombre, correo, token, foto_perfil, tipo_documento FROM usuarios WHERE token = $1',
     [token]
   )
   const fila = res.rows[0]
@@ -212,15 +216,16 @@ export async function obtenerUsuarioPorToken(token) {
     correo: fila.correo,
     token: fila.token,
     fotoPerfil: fila.foto_perfil || null,
+    tipoDocumento: fila.tipo_documento || null,
   }
 }
 
-export async function crearUsuario({ id, nombre, correo, contraseñaHash, token }) {
+export async function crearUsuario({ id, nombre, correo, contraseñaHash, token, tipoDocumento }) {
   const idNormalizado = String(id).trim()
   await pool.query(
-    `INSERT INTO usuarios (id, nombre, correo, contraseña_hash, token)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [idNormalizado, nombre.trim(), correo.trim().toLowerCase(), contraseñaHash, token]
+    `INSERT INTO usuarios (id, nombre, correo, contraseña_hash, token, tipo_documento)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [idNormalizado, nombre.trim(), correo.trim().toLowerCase(), contraseñaHash, token, tipoDocumento || null]
   )
   return {
     id: idNormalizado,
@@ -228,12 +233,13 @@ export async function crearUsuario({ id, nombre, correo, contraseñaHash, token 
     correo: correo.trim().toLowerCase(),
     token,
     fotoPerfil: null,
+    tipoDocumento: tipoDocumento || null,
   }
 }
 
 export async function actualizarTokenUsuario(idUsuario, token) {
   const res = await pool.query(
-    'UPDATE usuarios SET token = $1 WHERE id = $2 RETURNING id, nombre, correo, token, foto_perfil',
+    'UPDATE usuarios SET token = $1 WHERE id = $2 RETURNING id, nombre, correo, token, foto_perfil, tipo_documento',
     [token, idUsuario]
   )
   const fila = res.rows[0]
@@ -244,6 +250,7 @@ export async function actualizarTokenUsuario(idUsuario, token) {
     correo: fila.correo,
     token: fila.token,
     fotoPerfil: fila.foto_perfil || null,
+    tipoDocumento: fila.tipo_documento || null,
   }
 }
 
@@ -395,7 +402,7 @@ export async function obtenerNombreCompletoUsuario(idUsuario) {
 
 export async function actualizarFotoPerfil(idUsuario, fotoPerfil) {
   const res = await pool.query(
-    'UPDATE usuarios SET foto_perfil = $1 WHERE id = $2 RETURNING id, nombre, correo, token, foto_perfil',
+    'UPDATE usuarios SET foto_perfil = $1 WHERE id = $2 RETURNING id, nombre, correo, token, foto_perfil, tipo_documento',
     [fotoPerfil || null, idUsuario]
   )
   const fila = res.rows[0]
@@ -406,13 +413,14 @@ export async function actualizarFotoPerfil(idUsuario, fotoPerfil) {
     correo: fila.correo,
     token: fila.token,
     fotoPerfil: fila.foto_perfil || null,
+    tipoDocumento: fila.tipo_documento || null,
   }
 }
 
 export async function actualizarNombreUsuario(idUsuario, nombre) {
   if (!nombre || String(nombre).trim().length === 0) return null
   const res = await pool.query(
-    'UPDATE usuarios SET nombre = $1 WHERE id = $2 RETURNING id, nombre, correo, token, foto_perfil',
+    'UPDATE usuarios SET nombre = $1 WHERE id = $2 RETURNING id, nombre, correo, token, foto_perfil, tipo_documento',
     [nombre.trim(), idUsuario]
   )
   const fila = res.rows[0]
@@ -423,6 +431,7 @@ export async function actualizarNombreUsuario(idUsuario, nombre) {
     correo: fila.correo,
     token: fila.token,
     fotoPerfil: fila.foto_perfil || null,
+    tipoDocumento: fila.tipo_documento || null,
   }
 }
 
