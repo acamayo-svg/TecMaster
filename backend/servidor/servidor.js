@@ -158,8 +158,7 @@ app.get('/api/cursos', async (req, res) => {
 
 const TIPOS_DOCUMENTO_VALIDOS = new Set(['CC', 'TI', 'CE', 'PEP', 'PPT'])
 
-// Registro
-app.post('/api/usuarios/registro', async (req, res) => {
+async function registroUsuarioHandler(req, res) {
   try {
     const { nombre, correo, contraseña, cedula, tipoDocumento } = req.body || {}
     if (!nombre || !correo || !contraseña || !cedula) {
@@ -211,12 +210,23 @@ app.post('/api/usuarios/registro', async (req, res) => {
     })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Error al registrar.' })
+    if (err && err.code === 11000) {
+      return res.status(409).json({
+        error: 'Ya existe una cuenta con ese correo o esa identificación.',
+      })
+    }
+    res.status(500).json({
+      error: 'Error al registrar.',
+      detalle: err?.message || String(err),
+    })
   }
-})
+}
 
-// Iniciar sesión
-app.post('/api/usuarios/iniciar-sesion', async (req, res) => {
+// Registro (ruta oficial + alias sin /api por si el front o la env quedaron mal configurados)
+app.post('/api/usuarios/registro', registroUsuarioHandler)
+app.post('/usuarios/registro', registroUsuarioHandler)
+
+async function iniciarSesionHandler(req, res) {
   try {
     const { correo, contraseña } = req.body || {}
     if (!correo || !contraseña) {
@@ -244,7 +254,11 @@ app.post('/api/usuarios/iniciar-sesion', async (req, res) => {
     console.error(err)
     res.status(500).json({ error: 'Error al iniciar sesión.' })
   }
-})
+}
+
+// Iniciar sesión (oficial + alias sin /api)
+app.post('/api/usuarios/iniciar-sesion', iniciarSesionHandler)
+app.post('/usuarios/iniciar-sesion', iniciarSesionHandler)
 
 // Mis inscripciones (cursos del usuario, con imagen del curso)
 app.get('/api/mi-perfil/cursos', middlewareAuth, async (req, res) => {

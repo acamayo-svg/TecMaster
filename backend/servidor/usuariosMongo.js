@@ -14,7 +14,12 @@ async function asegurarIndices() {
   if (!promesaIndices) {
     promesaIndices = (async () => {
       const col = await coleccionUsuarios()
-      await col.createIndex({ correo: 1 }, { unique: true })
+      try {
+        await col.createIndex({ correo: 1 }, { unique: true })
+      } catch (err) {
+        // Puede fallar si ya había datos duplicados o índice distinto; no bloquea el registro.
+        console.warn('[Mongo usuarios] createIndex correo:', err?.message || err)
+      }
     })()
   }
   await promesaIndices

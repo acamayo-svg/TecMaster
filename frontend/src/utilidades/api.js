@@ -1,4 +1,11 @@
-const URL_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+/** Evita doble `/api` si en Vercel pusiste `https://host.com/api` */
+function normalizarUrlBase(url) {
+  let u = String(url || '').trim().replace(/\/+$/, '')
+  if (u.endsWith('/api')) u = u.slice(0, -4).replace(/\/+$/, '')
+  return u || 'http://localhost:3001'
+}
+
+const URL_BASE = normalizarUrlBase(import.meta.env.VITE_API_URL || 'http://localhost:3001')
 const TIMEOUT_MS = 20000
 
 /** fetch con tiempo límite para no quedarse colgado si el backend no responde */
@@ -45,7 +52,10 @@ export async function apiRegistro(nombre, correo, contraseña, cedula, tipoDocum
     body: JSON.stringify({ nombre, correo, contraseña, cedula, tipoDocumento }),
   })
   const datos = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(datos.error || 'Error al registrarse')
+  if (!res.ok) {
+    const msg = [datos.error, datos.detalle].filter(Boolean).join(' — ')
+    throw new Error(msg || 'Error al registrarse')
+  }
   return datos
 }
 
