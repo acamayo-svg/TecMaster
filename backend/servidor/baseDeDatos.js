@@ -1,317 +1,242 @@
-import pg from 'pg'
 import {
   calcularHashGenesis,
   calcularHashInscripcion,
   calcularHashCursoCompletado,
   calcularHashCertificado,
 } from './cadenaCertificados.js'
-import { mongoConfigurado } from './mongo.js'
+import { conectarMongo, obtenerDb, pingMongo } from './mongo.js'
 import * as usuariosMongo from './usuariosMongo.js'
 
-const { Pool } = pg
+const CURSOS_SEMILLA = [
+  {
+    _id: '1',
+    nombre: 'Desarrollo web con React',
+    duracion: '24 horas',
+    descripcion: 'Construye interfaces modernas con React, hooks y buenas prácticas.',
+    categoria: 'Desarrollo',
+    imagen: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600',
+  },
+  {
+    _id: '2',
+    nombre: 'JavaScript y Node.js',
+    duracion: '30 horas',
+    descripcion: 'ES6+, async/await, APIs y backend con Node.js.',
+    categoria: 'Desarrollo',
+    imagen: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=600',
+  },
+  {
+    _id: '3',
+    nombre: 'Ethical Hacking y pentesting',
+    duracion: '40 horas',
+    descripcion: 'Fundamentos de ciberseguridad, pruebas de penetración y hardening.',
+    categoria: 'Ciberseguridad',
+    imagen: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600',
+  },
+  {
+    _id: '4',
+    nombre: 'Seguridad ofensiva',
+    duracion: '35 horas',
+    descripcion: 'Análisis de vulnerabilidades, explotación y reportes de seguridad.',
+    categoria: 'Ciberseguridad',
+    imagen: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600',
+  },
+  {
+    _id: '5',
+    nombre: 'Soporte técnico y help desk',
+    duracion: '20 horas',
+    descripcion: 'Atención al usuario, diagnóstico y resolución de incidencias.',
+    categoria: 'Soporte técnico',
+    imagen: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600',
+  },
+  {
+    _id: '6',
+    nombre: 'Administración de sistemas',
+    duracion: '28 horas',
+    descripcion: 'Windows/Linux, usuarios, permisos y mantenimiento.',
+    categoria: 'Soporte técnico',
+    imagen: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600',
+  },
+  {
+    _id: '7',
+    nombre: 'Redes y TCP/IP',
+    duracion: '32 horas',
+    descripcion: 'Protocolos, direccionamiento, subredes y troubleshooting.',
+    categoria: 'Redes',
+    imagen: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600',
+  },
+  {
+    _id: '8',
+    nombre: 'Infraestructura y cloud',
+    duracion: '26 horas',
+    descripcion: 'Servidores, virtualización e introducción a la nube.',
+    categoria: 'Redes',
+    imagen: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600',
+  },
+]
 
-/** Si hay URI de Atlas y no se fuerza desactivar, los usuarios viven en Mongo (resto sigue en PostgreSQL). */
-function usarMongoParaUsuarios() {
-  if (process.env.USUARIOS_EN_MONGO === 'false') return false
-  return mongoConfigurado()
+function docACurso(doc) {
+  if (!doc) return null
+  return {
+    id: doc._id,
+    nombre: doc.nombre,
+    duracion: doc.duracion,
+    descripcion: doc.descripcion,
+    categoria: doc.categoria || 'General',
+    imagen: doc.imagen || null,
+  }
 }
 
-// Mismo patrón que Snappy: DB_* (Vercel/Supabase) con fallback a PG_* y local
-const host = process.env.DB_HOST || process.env.PGHOST || 'localhost'
-const port = parseInt(process.env.DB_PORT || process.env.PGPORT || '5432', 10)
-const database = process.env.DB_NAME || process.env.PGDATABASE || 'certificados'
-const user = process.env.DB_USER || process.env.PGUSER || 'postgres'
-const password = process.env.DB_PASSWORD || process.env.PGPASSWORD || 'postgres'
+/** Inscripción en formato que espera el resto del backend (antes filaAInscripcion). */
+function mongoInscripcionToApi(ins, imagenCurso = null) {
+  if (!ins) return null
+  return {
+    id: ins._id,
+    idUsuario: ins.idUsuario,
+    idCurso: ins.idCurso,
+    nombreCurso: ins.nombreCurso,
+    estado: ins.estado,
+    progreso: ins.progreso ?? 0,
+    idCertificado: ins.idCertificado ?? null,
+    fechaInscripcion: ins.fechaInscripcion,
+    fechaAprobacion: ins.fechaAprobacion ?? null,
+    imagenCurso: imagenCurso ?? ins.imagenCurso ?? null,
+    hashGenesis: ins.hashGenesis ?? null,
+    hashInscripcion: ins.hashInscripcion ?? null,
+    hashCursoCompletado: ins.hashCursoCompletado ?? null,
+  }
+}
 
-const isLocal = !process.env.VERCEL && (!host || host === 'localhost')
-
-const pool = new Pool({
-  host,
-  port,
-  database,
-  user,
-  password,
-  connectionTimeoutMillis: 8000,
-  // Evita "colgados" largos: corta queries lentas
-  query_timeout: 8000,
-  ...(isLocal ? {} : { ssl: { rejectUnauthorized: false } }),
-})
+function docACertificado(doc) {
+  if (!doc) return null
+  return {
+    id: doc._id,
+    idInscripcion: doc.idInscripcion,
+    idUsuario: doc.idUsuario,
+    nombreCurso: doc.nombreCurso,
+    codigoVerificacion: doc.codigoVerificacion,
+    fechaEmision: doc.fechaEmision,
+    hashCertificado: doc.hashCertificado ?? null,
+  }
+}
 
 export async function pingDb() {
-  const res = await pool.query('SELECT 1 AS ok')
-  return res.rows?.[0]?.ok === 1
+  await pingMongo()
+  return true
 }
 
-// Crear tablas si no existen (al iniciar)
+/** Índices y datos iniciales (antes DDL PostgreSQL). */
 export async function inicializarTablas() {
-  const cliente = await pool.connect()
-  try {
-    await cliente.query(`
-      CREATE TABLE IF NOT EXISTS usuarios (
-        id VARCHAR(64) PRIMARY KEY,
-        nombre VARCHAR(255) NOT NULL,
-        correo VARCHAR(255) NOT NULL UNIQUE,
-        contraseña_hash VARCHAR(255) NOT NULL,
-        token VARCHAR(128),
-        created_at TIMESTAMPTZ DEFAULT NOW()
-      );
-      CREATE TABLE IF NOT EXISTS cursos (
-        id VARCHAR(32) PRIMARY KEY,
-        nombre VARCHAR(255) NOT NULL,
-        duracion VARCHAR(64) NOT NULL,
-        descripcion TEXT,
-        categoria VARCHAR(64) DEFAULT 'General'
-      );
-      CREATE TABLE IF NOT EXISTS inscripciones (
-        id VARCHAR(64) PRIMARY KEY,
-        id_usuario VARCHAR(64) NOT NULL,
-        id_curso VARCHAR(32) NOT NULL,
-        nombre_curso VARCHAR(255) NOT NULL,
-        estado VARCHAR(32) NOT NULL DEFAULT 'inscrito',
-        progreso INTEGER NOT NULL DEFAULT 0,
-        id_certificado VARCHAR(64),
-        fecha_inscripcion DATE NOT NULL DEFAULT CURRENT_DATE,
-        fecha_aprobacion DATE,
-        UNIQUE(id_usuario, id_curso)
-      );
-      CREATE TABLE IF NOT EXISTS certificados (
-        id VARCHAR(64) PRIMARY KEY,
-        id_inscripcion VARCHAR(64) NOT NULL,
-        id_usuario VARCHAR(64) NOT NULL,
-        nombre_curso VARCHAR(255) NOT NULL,
-        codigo_verificacion VARCHAR(64) NOT NULL UNIQUE,
-        fecha_emision DATE NOT NULL DEFAULT CURRENT_DATE
-      );
-      CREATE INDEX IF NOT EXISTS idx_usuarios_correo ON usuarios(LOWER(correo));
-      CREATE INDEX IF NOT EXISTS idx_usuarios_token ON usuarios(token);
-      CREATE INDEX IF NOT EXISTS idx_inscripciones_usuario ON inscripciones(id_usuario);
-      CREATE INDEX IF NOT EXISTS idx_certificados_usuario ON certificados(id_usuario);
-      CREATE INDEX IF NOT EXISTS idx_certificados_codigo ON certificados(UPPER(codigo_verificacion));
-    `)
-    try {
-      await cliente.query(`ALTER TABLE cursos ADD COLUMN categoria VARCHAR(64) DEFAULT 'General';`)
-    } catch (_) { /* la columna ya existe */ }
-    try {
-      await cliente.query(`ALTER TABLE cursos ADD COLUMN imagen TEXT;`)
-    } catch (_) { /* la columna ya existe */ }
-    try {
-      await cliente.query(`ALTER TABLE usuarios ADD COLUMN foto_perfil TEXT;`)
-    } catch (_) { /* la columna ya existe */ }
-    try {
-      await cliente.query(`ALTER TABLE usuarios ADD COLUMN tipo_documento VARCHAR(96);`)
-    } catch (_) { /* ya existe */ }
-    try {
-      await cliente.query(`ALTER TABLE inscripciones ADD COLUMN hash_genesis VARCHAR(64);`)
-    } catch (_) { /* ya existe */ }
-    try {
-      await cliente.query(`ALTER TABLE inscripciones ADD COLUMN hash_inscripcion VARCHAR(64);`)
-    } catch (_) { /* ya existe */ }
-    try {
-      await cliente.query(`ALTER TABLE inscripciones ADD COLUMN hash_curso_completado VARCHAR(64);`)
-    } catch (_) { /* ya existe */ }
-    try {
-      await cliente.query(`ALTER TABLE certificados ADD COLUMN hash_certificado VARCHAR(64);`)
-    } catch (_) { /* ya existe */ }
-    const countCursos = await cliente.query('SELECT COUNT(*)::int AS n FROM cursos')
-    if (countCursos.rows[0].n === 0) {
-      await cliente.query(`
-        INSERT INTO cursos (id, nombre, duracion, descripcion, categoria, imagen) VALUES
-        ('1', 'Desarrollo web con React', '24 horas', 'Construye interfaces modernas con React, hooks y buenas prácticas.', 'Desarrollo', 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600'),
-        ('2', 'JavaScript y Node.js', '30 horas', 'ES6+, async/await, APIs y backend con Node.js.', 'Desarrollo', 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=600'),
-        ('3', 'Ethical Hacking y pentesting', '40 horas', 'Fundamentos de ciberseguridad, pruebas de penetración y hardening.', 'Ciberseguridad', 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600'),
-        ('4', 'Seguridad ofensiva', '35 horas', 'Análisis de vulnerabilidades, explotación y reportes de seguridad.', 'Ciberseguridad', 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600'),
-        ('5', 'Soporte técnico y help desk', '20 horas', 'Atención al usuario, diagnóstico y resolución de incidencias.', 'Soporte técnico', 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600'),
-        ('6', 'Administración de sistemas', '28 horas', 'Windows/Linux, usuarios, permisos y mantenimiento.', 'Soporte técnico', 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600'),
-        ('7', 'Redes y TCP/IP', '32 horas', 'Protocolos, direccionamiento, subredes y troubleshooting.', 'Redes', 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600'),
-        ('8', 'Infraestructura y cloud', '26 horas', 'Servidores, virtualización e introducción a la nube.', 'Redes', 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600')
-      `)
-    }
-  } finally {
-    cliente.release()
-  }
-}
+  await conectarMongo()
+  const db = await obtenerDb()
+  const certificados = db.collection('certificados')
+  const inscripciones = db.collection('inscripciones')
+  const cursos = db.collection('cursos')
 
-function filaACurso(fila) {
-  if (!fila) return null
-  return {
-    id: fila.id,
-    nombre: fila.nombre,
-    duracion: fila.duracion,
-    descripcion: fila.descripcion,
-    categoria: fila.categoria || 'General',
-    imagen: fila.imagen || null,
+  try {
+    await certificados.createIndex({ codigoVerificacion: 1 }, { unique: true })
+  } catch (err) {
+    console.warn('[Mongo] índice certificados.codigoVerificacion:', err?.message || err)
   }
+  try {
+    await inscripciones.createIndex({ idUsuario: 1, idCurso: 1 }, { unique: true })
+  } catch (err) {
+    console.warn('[Mongo] índice inscripciones usuario+curso:', err?.message || err)
+  }
+
+  const n = await cursos.countDocuments()
+  if (n === 0) {
+    await cursos.insertMany(CURSOS_SEMILLA)
+    console.log('Cursos iniciales insertados en MongoDB.')
+  }
+  console.log('MongoDB listo (colecciones cursos, inscripciones, certificados, usuarios).')
 }
 
 export async function obtenerCursosDisponibles() {
-  const res = await pool.query(
-    'SELECT id, nombre, duracion, descripcion, categoria, imagen FROM cursos ORDER BY categoria, id'
-  )
-  return res.rows.map(filaACurso)
+  const db = await obtenerDb()
+  const docs = await db
+    .collection('cursos')
+    .find({})
+    .sort({ categoria: 1, _id: 1 })
+    .toArray()
+  return docs.map(docACurso)
 }
 
 export async function obtenerCursoPorId(id) {
-  const res = await pool.query(
-    'SELECT id, nombre, duracion, descripcion, categoria, imagen FROM cursos WHERE id = $1',
-    [id]
-  )
-  return filaACurso(res.rows[0]) || null
-}
-
-function filaAUsuario(fila) {
-  if (!fila) return null
-  return {
-    id: fila.id,
-    nombre: fila.nombre,
-    correo: fila.correo,
-    contraseñaHash: fila.contraseña_hash,
-    token: fila.token,
-    fotoPerfil: fila.foto_perfil || null,
-    tipoDocumento: fila.tipo_documento || null,
-  }
-}
-
-function filaAInscripcion(fila) {
-  if (!fila) return null
-  return {
-    id: fila.id,
-    idUsuario: fila.id_usuario,
-    idCurso: fila.id_curso,
-    nombreCurso: fila.nombre_curso,
-    estado: fila.estado,
-    progreso: fila.progreso ?? 0,
-    idCertificado: fila.id_certificado,
-    fechaInscripcion: fila.fecha_inscripcion,
-    fechaAprobacion: fila.fecha_aprobacion,
-    imagenCurso: fila.imagen_curso || null,
-    hashGenesis: fila.hash_genesis || null,
-    hashInscripcion: fila.hash_inscripcion || null,
-    hashCursoCompletado: fila.hash_curso_completado || null,
-  }
-}
-
-function filaACertificado(fila) {
-  if (!fila) return null
-  return {
-    id: fila.id,
-    idInscripcion: fila.id_inscripcion,
-    idUsuario: fila.id_usuario,
-    nombreCurso: fila.nombre_curso,
-    codigoVerificacion: fila.codigo_verificacion,
-    fechaEmision: fila.fecha_emision,
-    hashCertificado: fila.hash_certificado || null,
-  }
+  const db = await obtenerDb()
+  const doc = await db.collection('cursos').findOne({ _id: String(id) })
+  return docACurso(doc)
 }
 
 export async function obtenerUsuarioPorCorreo(correo) {
-  if (usarMongoParaUsuarios()) {
-    return usuariosMongo.obtenerUsuarioPorCorreo(correo)
-  }
-  const res = await pool.query(
-    'SELECT id, nombre, correo, contraseña_hash, token, foto_perfil, tipo_documento FROM usuarios WHERE LOWER(correo) = LOWER($1)',
-    [correo]
-  )
-  return filaAUsuario(res.rows[0]) || null
+  return usuariosMongo.obtenerUsuarioPorCorreo(correo)
 }
 
 export async function obtenerUsuarioPorToken(token) {
-  if (usarMongoParaUsuarios()) {
-    return usuariosMongo.obtenerUsuarioPorToken(token)
-  }
-  const res = await pool.query(
-    'SELECT id, nombre, correo, token, foto_perfil, tipo_documento FROM usuarios WHERE token = $1',
-    [token]
-  )
-  const fila = res.rows[0]
-  if (!fila) return null
-  return {
-    id: fila.id,
-    nombre: fila.nombre,
-    correo: fila.correo,
-    token: fila.token,
-    fotoPerfil: fila.foto_perfil || null,
-    tipoDocumento: fila.tipo_documento || null,
-  }
+  return usuariosMongo.obtenerUsuarioPorToken(token)
 }
 
-export async function crearUsuario({ id, nombre, correo, contraseñaHash, token, tipoDocumento }) {
-  if (usarMongoParaUsuarios()) {
-    return usuariosMongo.crearUsuario({ id, nombre, correo, contraseñaHash, token, tipoDocumento })
-  }
-  const idNormalizado = String(id).trim()
-  await pool.query(
-    `INSERT INTO usuarios (id, nombre, correo, contraseña_hash, token, tipo_documento)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [idNormalizado, nombre.trim(), correo.trim().toLowerCase(), contraseñaHash, token, tipoDocumento || null]
-  )
-  return {
-    id: idNormalizado,
-    nombre: nombre.trim(),
-    correo: correo.trim().toLowerCase(),
-    token,
-    fotoPerfil: null,
-    tipoDocumento: tipoDocumento || null,
-  }
+export async function crearUsuario(payload) {
+  return usuariosMongo.crearUsuario(payload)
 }
 
 export async function actualizarTokenUsuario(idUsuario, token) {
-  if (usarMongoParaUsuarios()) {
-    return usuariosMongo.actualizarTokenUsuario(idUsuario, token)
-  }
-  const res = await pool.query(
-    'UPDATE usuarios SET token = $1 WHERE id = $2 RETURNING id, nombre, correo, token, foto_perfil, tipo_documento',
-    [token, idUsuario]
-  )
-  const fila = res.rows[0]
-  if (!fila) return null
-  return {
-    id: fila.id,
-    nombre: fila.nombre,
-    correo: fila.correo,
-    token: fila.token,
-    fotoPerfil: fila.foto_perfil || null,
-    tipoDocumento: fila.tipo_documento || null,
-  }
+  return usuariosMongo.actualizarTokenUsuario(idUsuario, token)
 }
 
 export async function obtenerInscripcionesPorUsuario(idUsuario) {
-  const res = await pool.query(
-    `SELECT i.id, i.id_usuario, i.id_curso, i.nombre_curso, i.estado, i.progreso,
-            i.id_certificado, i.fecha_inscripcion, i.fecha_aprobacion,
-            i.hash_genesis, i.hash_inscripcion, i.hash_curso_completado,
-            c.imagen AS imagen_curso
-     FROM inscripciones i
-     LEFT JOIN cursos c ON c.id = i.id_curso
-     WHERE i.id_usuario = $1 ORDER BY i.fecha_inscripcion DESC`,
-    [idUsuario]
-  )
-  return res.rows.map(filaAInscripcion)
+  const db = await obtenerDb()
+  const rows = await db
+    .collection('inscripciones')
+    .aggregate([
+      { $match: { idUsuario } },
+      { $sort: { fechaInscripcion: -1 } },
+      {
+        $lookup: {
+          from: 'cursos',
+          let: { cid: '$idCurso' },
+          pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$cid'] } } }, { $project: { imagen: 1 } }],
+          as: 'cursoDocs',
+        },
+      },
+      {
+        $addFields: {
+          imagenCurso: { $ifNull: [{ $arrayElemAt: ['$cursoDocs.imagen', 0] }, null] },
+        },
+      },
+      { $project: { cursoDocs: 0 } },
+    ])
+    .toArray()
+  return rows.map((row) => mongoInscripcionToApi(row, row.imagenCurso))
 }
 
 export async function obtenerInscripcion(idUsuario, idCurso) {
-  const res = await pool.query(
-    `SELECT i.id, i.id_usuario, i.id_curso, i.nombre_curso, i.estado, i.progreso,
-            i.id_certificado, i.fecha_inscripcion, i.fecha_aprobacion,
-            i.hash_genesis, i.hash_inscripcion, i.hash_curso_completado,
-            c.imagen AS imagen_curso
-     FROM inscripciones i
-     LEFT JOIN cursos c ON c.id = i.id_curso
-     WHERE i.id_usuario = $1 AND i.id_curso = $2`,
-    [idUsuario, idCurso]
-  )
-  return filaAInscripcion(res.rows[0]) || null
+  const db = await obtenerDb()
+  const ins = await db.collection('inscripciones').findOne({ idUsuario, idCurso: String(idCurso) })
+  if (!ins) return null
+  const curso = await db.collection('cursos').findOne({ _id: String(idCurso) }, { projection: { imagen: 1 } })
+  return mongoInscripcionToApi(ins, curso?.imagen || null)
 }
 
 export async function crearInscripcion({ idUsuario, idCurso, nombreCurso, nombreCompleto }) {
+  const db = await obtenerDb()
   const id = `insc-${Date.now()}`
   const fechaInscripcion = new Date().toISOString().slice(0, 10)
   const hashGenesis = calcularHashGenesis(nombreCompleto, idUsuario, idCurso, fechaInscripcion)
   const hashInscripcion = calcularHashInscripcion(id, fechaInscripcion, hashGenesis)
-  await pool.query(
-    `INSERT INTO inscripciones (id, id_usuario, id_curso, nombre_curso, estado, progreso, fecha_inscripcion, hash_genesis, hash_inscripcion)
-     VALUES ($1, $2, $3, $4, 'inscrito', 0, $5, $6, $7)`,
-    [id, idUsuario, idCurso, nombreCurso, fechaInscripcion, hashGenesis, hashInscripcion]
-  )
+  await db.collection('inscripciones').insertOne({
+    _id: id,
+    idUsuario,
+    idCurso: String(idCurso),
+    nombreCurso,
+    estado: 'inscrito',
+    progreso: 0,
+    idCertificado: null,
+    fechaInscripcion,
+    fechaAprobacion: null,
+    hashGenesis,
+    hashInscripcion,
+    hashCursoCompletado: null,
+  })
   return {
     id,
     idUsuario,
@@ -325,172 +250,113 @@ export async function crearInscripcion({ idUsuario, idCurso, nombreCurso, nombre
 }
 
 export async function aprobarInscripcion(idInscripcion, idUsuario) {
-  const cliente = await pool.connect()
-  try {
-    const insRes = await cliente.query(
-      `SELECT id, id_curso, nombre_curso, hash_inscripcion, fecha_inscripcion FROM inscripciones WHERE id = $1 AND id_usuario = $2`,
-      [idInscripcion, idUsuario]
-    )
-    const ins = insRes.rows[0]
-    if (!ins) return null
+  const db = await obtenerDb()
+  const insCol = db.collection('inscripciones')
+  const certCol = db.collection('certificados')
 
-    const fechaAprobacion = new Date().toISOString().slice(0, 10)
-    const tieneCadena = !!ins.hash_inscripcion
-    let hashCursoCompletado = null
-    let hashCertificado = null
-    if (tieneCadena) {
-      hashCursoCompletado = calcularHashCursoCompletado(idInscripcion, fechaAprobacion, ins.hash_inscripcion)
+  const ins = await insCol.findOne({ _id: idInscripcion, idUsuario })
+  if (!ins) return null
+
+  const fechaAprobacion = new Date().toISOString().slice(0, 10)
+  const tieneCadena = Boolean(ins.hashInscripcion)
+  let hashCursoCompletado = null
+  let hashCertificado = null
+  if (tieneCadena) {
+    hashCursoCompletado = calcularHashCursoCompletado(idInscripcion, fechaAprobacion, ins.hashInscripcion)
+  }
+
+  const numCert = (await certCol.countDocuments()) + 1
+  const codigoVerificacion = `CERT-${new Date().getFullYear()}-${String(numCert).padStart(3, '0')}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+  const idCertificado = `cert-${ins.idCurso}-${Date.now()}`
+  if (hashCursoCompletado) {
+    hashCertificado = calcularHashCertificado(idCertificado, codigoVerificacion, fechaAprobacion, hashCursoCompletado)
+  }
+
+  await insCol.updateOne(
+    { _id: idInscripcion },
+    {
+      $set: {
+        estado: 'aprobado',
+        progreso: 100,
+        idCertificado,
+        fechaAprobacion,
+        hashCursoCompletado,
+      },
     }
+  )
 
-    const countRes = await cliente.query('SELECT COUNT(*)::int AS n FROM certificados')
-    const numCert = countRes.rows[0].n + 1
-    const codigoVerificacion = `CERT-${new Date().getFullYear()}-${String(numCert).padStart(3, '0')}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
-    const idCertificado = `cert-${ins.id_curso}-${Date.now()}`
-    if (hashCursoCompletado) {
-      hashCertificado = calcularHashCertificado(idCertificado, codigoVerificacion, fechaAprobacion, hashCursoCompletado)
-    }
+  await certCol.insertOne({
+    _id: idCertificado,
+    idInscripcion,
+    idUsuario,
+    nombreCurso: ins.nombreCurso,
+    codigoVerificacion,
+    fechaEmision: fechaAprobacion,
+    hashCertificado,
+  })
 
-    await cliente.query(
-      `UPDATE inscripciones SET estado = 'aprobado', progreso = 100, id_certificado = $1, fecha_aprobacion = $2, hash_curso_completado = $3 WHERE id = $4`,
-      [idCertificado, fechaAprobacion, hashCursoCompletado, idInscripcion]
-    )
-    await cliente.query(
-      `INSERT INTO certificados (id, id_inscripcion, id_usuario, nombre_curso, codigo_verificacion, fecha_emision, hash_certificado)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [idCertificado, idInscripcion, idUsuario, ins.nombre_curso, codigoVerificacion, fechaAprobacion, hashCertificado]
-    )
-
-    const insActualizada = await cliente.query(
-      `SELECT id, id_usuario, id_curso, nombre_curso, estado, progreso, id_certificado, fecha_inscripcion, fecha_aprobacion, hash_genesis, hash_inscripcion, hash_curso_completado FROM inscripciones WHERE id = $1`,
-      [idInscripcion]
-    )
-    const certRes = await cliente.query(
-      `SELECT id, id_inscripcion, id_usuario, nombre_curso, codigo_verificacion, fecha_emision, hash_certificado FROM certificados WHERE id = $1`,
-      [idCertificado]
-    )
-    return {
-      inscripcion: filaAInscripcion(insActualizada.rows[0]),
-      certificado: filaACertificado(certRes.rows[0]),
-    }
-  } finally {
-    cliente.release()
+  const insActualizada = await insCol.findOne({ _id: idInscripcion })
+  const certDoc = await certCol.findOne({ _id: idCertificado })
+  return {
+    inscripcion: mongoInscripcionToApi(insActualizada, null),
+    certificado: docACertificado(certDoc),
   }
 }
 
 export async function obtenerCertificadosPorUsuario(idUsuario) {
-  const res = await pool.query(
-    `SELECT id, id_inscripcion, id_usuario, nombre_curso, codigo_verificacion, fecha_emision, hash_certificado
-     FROM certificados WHERE id_usuario = $1 ORDER BY fecha_emision DESC`,
-    [idUsuario]
-  )
-  return res.rows.map(filaACertificado)
+  const db = await obtenerDb()
+  const docs = await db
+    .collection('certificados')
+    .find({ idUsuario })
+    .sort({ fechaEmision: -1 })
+    .toArray()
+  return docs.map(docACertificado)
 }
 
 export async function obtenerCertificadoPorId(id) {
-  const res = await pool.query(
-    `SELECT id, id_inscripcion, id_usuario, nombre_curso, codigo_verificacion, fecha_emision, hash_certificado
-     FROM certificados WHERE id = $1`,
-    [id]
-  )
-  return filaACertificado(res.rows[0]) || null
+  const db = await obtenerDb()
+  const doc = await db.collection('certificados').findOne({ _id: id })
+  return docACertificado(doc)
 }
 
 export async function obtenerCertificadoPorCodigo(codigo) {
   const normalizado = (codigo || '').toString().trim().toUpperCase()
-  const res = await pool.query(
-    `SELECT id, id_inscripcion, id_usuario, nombre_curso, codigo_verificacion, fecha_emision, hash_certificado
-     FROM certificados WHERE UPPER(codigo_verificacion) = $1`,
-    [normalizado]
-  )
-  return filaACertificado(res.rows[0]) || null
+  const db = await obtenerDb()
+  const doc = await db.collection('certificados').findOne({ codigoVerificacion: normalizado })
+  return docACertificado(doc)
 }
 
-/** Inscripción con todos los hashes para validar la cadena del certificado */
 export async function obtenerInscripcionConHashes(idInscripcion) {
-  const res = await pool.query(
-    `SELECT id, id_usuario, id_curso, nombre_curso, fecha_inscripcion, fecha_aprobacion, hash_genesis, hash_inscripcion, hash_curso_completado
-     FROM inscripciones WHERE id = $1`,
-    [idInscripcion]
-  )
-  return filaAInscripcion(res.rows[0]) || null
+  const db = await obtenerDb()
+  const ins = await db.collection('inscripciones').findOne({ _id: idInscripcion })
+  return mongoInscripcionToApi(ins, null)
 }
 
 export async function obtenerNombreCompletoUsuario(idUsuario) {
-  if (usarMongoParaUsuarios()) {
-    return usuariosMongo.obtenerNombreCompletoUsuario(idUsuario)
-  }
-  const res = await pool.query('SELECT nombre FROM usuarios WHERE id = $1', [idUsuario])
-  return res.rows[0] ? res.rows[0].nombre : null
+  return usuariosMongo.obtenerNombreCompletoUsuario(idUsuario)
 }
 
 export async function actualizarFotoPerfil(idUsuario, fotoPerfil) {
-  if (usarMongoParaUsuarios()) {
-    return usuariosMongo.actualizarFotoPerfil(idUsuario, fotoPerfil)
-  }
-  const res = await pool.query(
-    'UPDATE usuarios SET foto_perfil = $1 WHERE id = $2 RETURNING id, nombre, correo, token, foto_perfil, tipo_documento',
-    [fotoPerfil || null, idUsuario]
-  )
-  const fila = res.rows[0]
-  if (!fila) return null
-  return {
-    id: fila.id,
-    nombre: fila.nombre,
-    correo: fila.correo,
-    token: fila.token,
-    fotoPerfil: fila.foto_perfil || null,
-    tipoDocumento: fila.tipo_documento || null,
-  }
+  return usuariosMongo.actualizarFotoPerfil(idUsuario, fotoPerfil)
 }
 
 export async function actualizarNombreUsuario(idUsuario, nombre) {
-  if (!nombre || String(nombre).trim().length === 0) return null
-  if (usarMongoParaUsuarios()) {
-    return usuariosMongo.actualizarNombreUsuario(idUsuario, nombre)
-  }
-  const res = await pool.query(
-    'UPDATE usuarios SET nombre = $1 WHERE id = $2 RETURNING id, nombre, correo, token, foto_perfil, tipo_documento',
-    [nombre.trim(), idUsuario]
-  )
-  const fila = res.rows[0]
-  if (!fila) return null
-  return {
-    id: fila.id,
-    nombre: fila.nombre,
-    correo: fila.correo,
-    token: fila.token,
-    fotoPerfil: fila.foto_perfil || null,
-    tipoDocumento: fila.tipo_documento || null,
-  }
+  return usuariosMongo.actualizarNombreUsuario(idUsuario, nombre)
 }
 
 export async function obtenerUsuarioPorIdParaContraseña(idUsuario) {
-  if (usarMongoParaUsuarios()) {
-    return usuariosMongo.obtenerUsuarioPorIdParaContraseña(idUsuario)
-  }
-  const res = await pool.query(
-    'SELECT id, contraseña_hash FROM usuarios WHERE id = $1',
-    [idUsuario]
-  )
-  return res.rows[0] || null
+  return usuariosMongo.obtenerUsuarioPorIdParaContraseña(idUsuario)
 }
 
 export async function actualizarContraseña(idUsuario, nuevaContraseñaHash) {
-  if (usarMongoParaUsuarios()) {
-    return usuariosMongo.actualizarContraseña(idUsuario, nuevaContraseñaHash)
-  }
-  await pool.query(
-    'UPDATE usuarios SET contraseña_hash = $1 WHERE id = $2',
-    [nuevaContraseñaHash, idUsuario]
-  )
-  return true
+  return usuariosMongo.actualizarContraseña(idUsuario, nuevaContraseñaHash)
 }
 
 export async function actualizarProgresoInscripcion(idInscripcion, idUsuario, progreso) {
   const num = Math.min(100, Math.max(0, parseInt(progreso, 10) || 0))
-  const res = await pool.query(
-    'UPDATE inscripciones SET progreso = $1 WHERE id = $2 AND id_usuario = $3 RETURNING id',
-    [num, idInscripcion, idUsuario]
-  )
-  return res.rowCount > 0
+  const db = await obtenerDb()
+  const r = await db
+    .collection('inscripciones')
+    .updateOne({ _id: idInscripcion, idUsuario }, { $set: { progreso: num } })
+  return r.matchedCount > 0
 }

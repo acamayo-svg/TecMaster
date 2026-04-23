@@ -80,7 +80,7 @@ async function ensureDb() {
     await dbReady
     return
   }
-  // En Vercel NO ejecutamos DDL pesado; solo verificamos conexión.
+  // En Vercel solo ping a Mongo; en servidor completo inicializamos índices y semillas.
   const tarea = process.env.VERCEL ? pingDb() : inicializarTablas()
   dbReady = tarea
     .then(() => {
@@ -98,7 +98,7 @@ async function requireDb(req, res, next) {
     await ensureDb()
     next()
   } catch (err) {
-    console.error('Error al conectar con PostgreSQL:', err.message)
+    console.error('Error al conectar con MongoDB:', err.message)
     if (!res.headersSent) res.status(503).json({ mensaje: 'Base de datos no disponible.' })
   }
 }
@@ -514,10 +514,10 @@ app.get('/api/certificados/verificar/:codigo', async (req, res) => {
 async function iniciar() {
   try {
     await inicializarTablas()
-    console.log('Tablas de PostgreSQL listas.')
+    console.log('Base de datos MongoDB lista.')
   } catch (err) {
-    console.error('Error al conectar o crear tablas en PostgreSQL:', err.message)
-    console.error('Comprueba que PostgreSQL esté en marcha y que la base de datos exista.')
+    console.error('Error al conectar o inicializar MongoDB:', err.message)
+    console.error('Comprueba MONGO_URI/MONGODB_URI, Network Access en Atlas (p. ej. 0.0.0.0/0) y NODE_VERSION >= 20.')
     process.exit(1)
   }
   app.listen(PUERTO, () => {
