@@ -2,6 +2,9 @@
   "name": "plataforma-certificados-backend",
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node servidor/servidor.js",
     "iniciar": "node servidor/servidor.js",

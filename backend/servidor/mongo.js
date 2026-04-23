@@ -1,4 +1,14 @@
-import { MongoClient } from 'mongodb'
+import dns from 'node:dns'
+import { MongoClient, ServerApiVersion } from 'mongodb'
+
+// Render/Vercel + Atlas: priorizar IPv4 evita fallos TLS intermitentes (alert 80) con SRV/IPv6.
+if (process.env.MONGO_DNS_IPV4FIRST !== 'false') {
+  try {
+    dns.setDefaultResultOrder('ipv4first')
+  } catch {
+    /* Node antiguo sin esta API */
+  }
+}
 
 // Render u otros hosts a veces usan MONGO_URI; local/.env.ejemplo usa MONGODB_URI
 const uri = String(process.env.MONGODB_URI || process.env.MONGO_URI || '').trim()
@@ -24,11 +34,16 @@ export async function conectarMongo() {
 
   promesaConexion = (async () => {
     const nuevoCliente = new MongoClient(uri, {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: false,
+        deprecationErrors: true,
+      },
       maxPoolSize: 10,
       minPoolSize: 0,
-      serverSelectionTimeoutMS: 8000,
-      connectTimeoutMS: 8000,
-      socketTimeoutMS: 8000,
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
+      socketTimeoutMS: 15000,
     })
     await nuevoCliente.connect()
     cliente = nuevoCliente
